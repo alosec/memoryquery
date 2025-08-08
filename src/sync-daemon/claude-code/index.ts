@@ -225,6 +225,29 @@ export async function stopWatching(): Promise<void> {
 }
 
 /**
+ * Check if watcher is active
+ */
+export function isWatcherActive(): boolean {
+  return !!watcher;
+}
+
+/**
+ * Get recent sync latency from transaction logs
+ */
+export function getRecentSyncLatency(): { recent: number | null; p95: number | null; count: number } {
+  try {
+    const { getRecentSyncLatency: getLatencyFromLogs } = require('../execute/transaction-log.js');
+    return getLatencyFromLogs();
+  } catch (error) {
+    return {
+      recent: null,
+      p95: null,
+      count: 0
+    };
+  }
+}
+
+/**
  * Get sync statistics
  */
 export function getSyncStats(): any {
@@ -252,11 +275,12 @@ export function getSyncStats(): any {
 }
 
 /**
- * Health check for sync daemon
+ * Health check for sync daemon - deterministic and fast
  */
 export async function healthCheck(): Promise<{ status: 'healthy' | 'degraded' | 'error'; details: any }> {
   try {
     const stats = getSyncStats();
+    const syncLatency = getRecentSyncLatency();
     
     const health = {
       status: 'healthy' as const,
@@ -269,6 +293,7 @@ export async function healthCheck(): Promise<{ status: 'healthy' | 'degraded' | 
           active: !!watcher,
           status: watcher ? 'running' : 'stopped'
         },
+        syncLatency: syncLatency,
         timestamp: new Date().toISOString()
       }
     };

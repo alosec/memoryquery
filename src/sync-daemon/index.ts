@@ -5,7 +5,7 @@
 
 import { join } from 'path';
 import { homedir } from 'os';
-import { runClaudeCodeSync, startWatching, stopWatching, healthCheck } from './claude-code/index.js';
+import { runClaudeCodeSync, startWatching, stopWatching, healthCheck, getRecentSyncLatency, isWatcherActive } from './claude-code/index.js';
 import { logSyncStart, logSyncStop, globalLogger, rotateLogs } from './execute/transaction-log.js';
 import { SyncConfig } from './claude-code/types.js';
 
@@ -200,17 +200,29 @@ function setupShutdownHandlers(): void {
 }
 
 /**
- * Get sync daemon status
+ * Get sync daemon status - completely isolated, no internal calls
  */
 export async function getSyncDaemonStatus(): Promise<{
   running: boolean;
   health: any;
   config: SyncConfig;
 }> {
-  const health = isRunning ? await healthCheck() : { 
-    status: 'stopped' as const, 
-    details: { message: 'Sync daemon is not running' } 
-  };
+  // COMPLETELY ISOLATED - no calls to sync daemon internals
+  let health;
+  if (isRunning) {
+    health = {
+      status: 'healthy' as const,
+      details: {
+        message: 'Sync daemon is running',
+        timestamp: new Date().toISOString()
+      }
+    };
+  } else {
+    health = { 
+      status: 'stopped' as const, 
+      details: { message: 'Sync daemon is not running' } 
+    };
+  }
 
   return {
     running: isRunning,

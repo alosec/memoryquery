@@ -96,29 +96,39 @@ program
   .command('status')
   .description('Check service status')
   .action(async () => {
-    console.log('🔍 Service Status:');
-    
     try {
       const status = await getSyncDaemonStatus();
       
-      console.log(`Sync Daemon: ${status.running ? '✅ Running' : '❌ Stopped'}`);
+      // Simple, deterministic output
+      console.log(`Sync Daemon: ${status.running ? 'RUNNING' : 'STOPPED'}`);
       
       if (status.running && status.health) {
-        console.log(`  Health: ${status.health.status}`);
+        console.log(`Health: ${status.health.status.toUpperCase()}`);
+        
         if (status.health.details?.database) {
-          console.log(`  Database: ${status.health.details.database.accessible ? '✅ Connected' : '❌ Error'}`);
-          console.log(`  Records: ${status.health.details.database.recordCount || 0}`);
+          const db = status.health.details.database;
+          console.log(`Database: ${db.accessible ? 'CONNECTED' : 'ERROR'}`);
+          console.log(`Records: ${db.recordCount || 0}`);
         }
+        
         if (status.health.details?.watcher) {
-          console.log(`  File Watcher: ${status.health.details.watcher.active ? '✅ Active' : '❌ Inactive'}`);
+          const watcher = status.health.details.watcher;
+          console.log(`File Watcher: ${watcher.active ? 'ACTIVE' : 'INACTIVE'}`);
         }
+        
+        if (status.health.details?.syncLatency) {
+          const latency = status.health.details.syncLatency;
+          console.log(`Sync Latency: ${latency.recent || 'N/A'}ms (P95: ${latency.p95 || 'N/A'}ms)`);
+        }
+      } else {
+        console.log('Health: NOT_AVAILABLE');
       }
       
-      // TODO: Add MCP server status check when available
-      console.log('MCP Server: Status check not implemented yet');
+      console.log('MCP Server: NOT_IMPLEMENTED');
       
     } catch (error) {
-      console.error('❌ Failed to get status:', error);
+      console.log('Sync Daemon: ERROR');
+      console.log(`Error: ${error instanceof Error ? error.message : String(error)}`);
     }
   });
 

@@ -66,11 +66,11 @@ simple-memory-mcp/
 
 ### 🎯 Current Development Focus (August 8, 2025)
 1. **✅ Sync Daemon First Pass**: Complete Watch-Transform-Execute pipeline implemented following cafe-db-sync patterns
-2. **🔄 Unit Testing Phase**: Write comprehensive tests for each component (parser, transformer, database, watcher)
-3. **🔄 Integration Testing**: Test end-to-end sync daemon + MCP server coordination
-4. **📋 Next: Installation Script**: Setup automation prioritizing MCP registration and functionality
+2. **⚠️ Testing Phase Results**: Executed test suite - discovered fundamental design flaws requiring test redesign
+3. **📋 Next: Testing Apparatus Redesign**: Refine tests to validate real data sync instead of synthetic test files
+4. **📋 Future: Installation Script**: Setup automation prioritizing MCP registration and functionality
 
-**Immediate Priority**: Unit tests for sync daemon components to ensure reliability before production deployment.
+**Immediate Priority**: Redesign test suite to validate real Claude Code conversation sync (see planning/testing-redesign-feedback.md)
 
 ### Integration Strategy for Sync Daemon
 - **Purpose**: Ensure MCP server has fresh conversation data from Claude Code JSONL files
@@ -101,3 +101,62 @@ simple-memory-mcp/
 **"Build it Right from Day 1"**: This project prioritizes doing things properly over speed. The goal is a solid package that represents the Claude Code memory tools ecosystem well.
 
 Every architectural decision should be made through the lens of: "Is this the right way to solve this problem?"
+
+## ⚠️ Technical Debt Identified (December 2024)
+
+### Critical Issues to Address
+1. **Hardcoded Paths**: Some paths still reference original Claude Code DB instead of simple-memory DB
+   - Need systematic review of all database path references
+   - Ensure consistent use of `SIMPLE_MEMORY_DB_PATH` environment variable
+   
+2. **TODO Comments**: Unresolved TODO comments throughout codebase need tracking
+   - Create issue tracker or resolve inline
+   - Priority assessment for each TODO item
+
+### ⚠️ CRITICAL: Status Command Design Failure (August 2025)
+
+**Problem**: The `npm run status` command produces enormous log outputs (80k+ lines) instead of simple status information.
+
+**Root Cause**: Status command triggers the sync daemon's internal operations which cause massive log generation:
+1. `getSyncDaemonStatus()` calls `getRecentSyncLatency()` which reads transaction logs
+2. Reading logs triggers sync daemon activity 
+3. Sync daemon produces continuous output during status check
+4. Status becomes unusable for quick checks
+
+**Requirements for Fix**:
+- Status command must return deterministic, FAST response
+- Should show: sync daemon running/stopped, latency metrics, watcher status
+- Must NOT trigger any sync operations or log generation
+- Output should be <10 lines, complete in <1 second
+
+**Impact**: Status command is unusable for testing, monitoring, or quick checks. Critical blocker for test suite execution.
+   
+3. **Type Safety**: Multiple `any` types compromise TypeScript benefits
+   - Audit all `any` usage in CLI, MCP server, and sync daemon
+   - Define proper interfaces for server instances, config objects, promises
+   
+4. **Configuration Consolidation**: Environment variable handling scattered
+   - Centralize config management in dedicated module
+   - Consistent defaults and validation across all components
+   - Single source of truth for paths, timeouts, and service settings
+
+### Testing Implementation Complete (December 2024)
+- **✅ Test Suite Created**: 8 non-interactive test scripts implemented in `/test/`
+- **✅ Core Metrics Covered**: Sync latency (P50/P95), data integrity, error handling
+- **✅ LLM-Friendly Design**: Parseable output with clear exit codes
+- **✅ Package.json Updated**: Test commands integrated (`npm test`, category-specific)
+
+### Next Phase: Test Execution and Validation
+**Outside Current Session Scope:**
+1. **Run Tests**: Execute suite to discover actual issues
+2. **Validate Quality**: Ensure tests detect real problems with helpful debug output
+3. **Fix Issues**: Address bugs revealed by testing
+4. **Refine Tests**: Adjust based on real-world performance
+
+**Critical Validation Points:**
+- Do tests actually detect sync failures?
+- Are latency measurements accurate?
+- Is debug output helpful for troubleshooting?
+- Do tests work on fresh installations?
+
+The foundation is built - next step is iterative refinement through actual execution.

@@ -256,3 +256,36 @@ export function getRecentLogs(count: number = 100): TransactionLogEntry[] {
     return [];
   }
 }
+
+/**
+ * Get recent sync latency metrics from transaction logs
+ */
+export function getRecentSyncLatency(): { recent: number | null; p95: number | null; count: number } {
+  try {
+    const logs = getRecentLogs(1000); // Look at last 1000 entries
+    
+    // Find file processing completion events with duration
+    const processingEvents = logs
+      .filter(entry => entry.event === 'file_processing_complete' && entry.data.duration)
+      .map(entry => entry.data.duration)
+      .slice(-50); // Last 50 sync operations
+    
+    if (processingEvents.length === 0) {
+      return { recent: null, p95: null, count: 0 };
+    }
+    
+    // Calculate P95 latency
+    const sorted = [...processingEvents].sort((a, b) => a - b);
+    const p95Index = Math.floor(sorted.length * 0.95);
+    const p95 = sorted[p95Index];
+    const recent = processingEvents[processingEvents.length - 1];
+    
+    return {
+      recent,
+      p95,
+      count: processingEvents.length
+    };
+  } catch (error) {
+    return { recent: null, p95: null, count: 0 };
+  }
+}
