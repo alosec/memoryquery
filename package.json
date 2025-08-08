@@ -1,0 +1,60 @@
+{
+  "name": "simple-memory-mcp",
+  "version": "0.1.0",
+  "description": "Unified memory system for AI coding tools with MCP protocol integration",
+  "main": "dist/index.js",
+  "scripts": {
+    "dev": "concurrently \"npm run dev:mcp\" \"npm run dev:sync\" \"npm run dev:cli\"",
+    "dev:mcp": "tsx watch src/mcp-server/server.ts",
+    "dev:sync": "tsx watch src/sync-daemon/daemon.ts", 
+    "dev:cli": "tsx watch src/cli/index.ts",
+    "build": "tsc && npm run build:copy",
+    "build:copy": "cp -r scripts dist/ && cp -r docker dist/",
+    "test": "vitest",
+    "test:ci": "vitest run --coverage",
+    "install-system": "node scripts/install.js",
+    "register-mcp": "node scripts/register-mcp.js",
+    "start": "node dist/cli/index.js start",
+    "stop": "node dist/cli/index.js stop",
+    "status": "node dist/cli/index.js status",
+    "logs": "node dist/cli/index.js logs"
+  },
+  "bin": {
+    "simple-memory": "./dist/cli/index.js"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.17.0",
+    "better-sqlite3": "^12.2.0",
+    "chokidar": "^4.0.3",
+    "commander": "^12.0.0",
+    "sqlite3": "^5.1.7",
+    "tsx": "^4.0.0",
+    "uuid": "^11.1.0"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^7.6.13",
+    "@types/node": "^20.19.9",
+    "@types/uuid": "^10.0.0",
+    "concurrently": "^9.0.1",
+    "typescript": "^5.7.2",
+    "vitest": "^3.2.4",
+    "c8": "^10.1.2"
+  },
+  "keywords": [
+    "mcp",
+    "claude-code",
+    "conversation-history",
+    "ai-tools",
+    "memory",
+    "sync",
+    "sqlite"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/user/simple-memory-mcp.git"
+  },
+  "license": "MIT",
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}
