@@ -7,6 +7,7 @@ import { spawn, ChildProcess, exec } from 'child_process';
 import { promisify } from 'util';
 import * as path from 'path';
 import * as fs from 'fs';
+import * as os from 'os';
 
 const execAsync = promisify(exec);
 
@@ -25,6 +26,7 @@ const activeProcesses = new Map<string, DaemonProcess>();
 export async function startDaemon(config?: {
   dbPath?: string;
   projectsPath?: string;
+  daemon?: boolean;
 }): Promise<{ success: boolean; pid?: number; error?: string }> {
   try {
     // Check if already running externally
@@ -38,9 +40,11 @@ export async function startDaemon(config?: {
 
     // Find the sync daemon entry point
     const possiblePaths = [
+      path.join(process.cwd(), 'dist', 'sync-daemon', 'daemon.js'),  // New daemon wrapper
       path.join(process.cwd(), 'dist', 'sync-daemon', 'index.js'),
+      path.join(process.cwd(), 'src', 'sync-daemon', 'daemon.ts'),   // TypeScript daemon wrapper
       path.join(process.cwd(), 'src', 'sync-daemon', 'index.ts'),
-      path.join(__dirname, '..', '..', 'sync-daemon', 'index.js')
+      path.join(__dirname, '..', '..', 'sync-daemon', 'daemon.js')
     ];
 
     let daemonPath: string | null = null;
@@ -71,10 +75,17 @@ export async function startDaemon(config?: {
     const isTypeScript = daemonPath.endsWith('.ts');
     const command = isTypeScript ? 'tsx' : 'node';
     
-    // Spawn the daemon as a detached process
-    const child = spawn(command, [daemonPath], {
-      detached: true,
-      stdio: ['ignore', 'pipe', 'pipe'],
+    // Build arguments
+    const args = [daemonPath];
+    if (config?.daemon !== false) {
+      // Default to daemon mode unless explicitly disabled
+      args.push('--daemon');
+    }
+    
+    // Spawn the daemon
+    const child = spawn(command, args, {
+      detached: false,  // Let daemon wrapper handle detaching
+      stdio: config?.daemon !== false ? 'ignore' : 'inherit',
       env
     });
 
@@ -85,30 +96,35 @@ export async function startDaemon(config?: {
       };
     }
 
-    // Store process reference
-    activeProcesses.set('sync-daemon', {
-      process: child,
-      pid: child.pid,
-      startTime: new Date()
-    });
+    // Store process reference (only if not daemon mode)
+    if (config?.daemon === false) {
+      activeProcesses.set('sync-daemon', {
+        process: child,
+        pid: child.pid,
+        startTime: new Date()
+      });
+    }
 
-    // Set up log handling (but don't block)
-    child.stdout?.on('data', (data) => {
-      // Could write to log file if needed
-      if (process.env.DEBUG) {
-        console.log('[sync-daemon]:', data.toString());
+    // For daemon mode, wait a bit to get the actual PID
+    if (config?.daemon !== false) {
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // Check if daemon started successfully
+      const running = await isDaemonRunning();
+      if (running.running) {
+        return {
+          success: true,
+          pid: running.pid
+        };
+      } else {
+        return {
+          success: false,
+          error: 'Daemon failed to start - check logs in ~/.local/share/simple-memory/logs/'
+        };
       }
-    });
+    }
 
-    child.stderr?.on('data', (data) => {
-      if (process.env.DEBUG) {
-        console.error('[sync-daemon error]:', data.toString());
-      }
-    });
-
-    // Let process continue independently
-    child.unref();
-
+    // For foreground mode, just check if process started
     return {
       success: true,
       pid: child.pid
@@ -127,7 +143,35 @@ export async function startDaemon(config?: {
  */
 export async function stopDaemon(): Promise<{ success: boolean; error?: string }> {
   try {
-    // First check our tracked processes
+    // First check PID file
+    const pidFile = path.join(os.homedir(), '.local/share/simple-memory/logs/sync-daemon.pid');
+    if (fs.existsSync(pidFile)) {
+      try {
+        const pid = parseInt(fs.readFileSync(pidFile, 'utf-8').trim());
+        process.kill(pid, 'SIGTERM');
+        
+        // Give it a moment to exit cleanly
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
+        // Check if it actually stopped
+        try {
+          process.kill(pid, 0); // Check if still running
+          // If we get here, it's still running, force kill
+          process.kill(pid, 'SIGKILL');
+        } catch {
+          // Process is gone, which is what we want
+        }
+        
+        // Remove PID file
+        fs.unlinkSync(pidFile);
+        return { success: true };
+      } catch (error) {
+        // Try to remove stale PID file
+        try { fs.unlinkSync(pidFile); } catch {}
+      }
+    }
+    
+    // Then check our tracked processes
     const tracked = activeProcesses.get('sync-daemon');
     if (tracked) {
       try {
@@ -202,7 +246,21 @@ export async function stopDaemon(): Promise<{ success: boolean; error?: string }
  * Check if sync daemon is running
  */
 export async function isDaemonRunning(): Promise<{ running: boolean; pid?: number }> {
-  // First check our tracked processes
+  // First check PID file
+  const pidFile = path.join(os.homedir(), '.local/share/simple-memory/logs/sync-daemon.pid');
+  if (fs.existsSync(pidFile)) {
+    try {
+      const pid = parseInt(fs.readFileSync(pidFile, 'utf-8').trim());
+      // Check if process is still alive
+      process.kill(pid, 0);
+      return { running: true, pid };
+    } catch {
+      // PID file exists but process is dead, remove stale PID file
+      fs.unlinkSync(pidFile);
+    }
+  }
+  
+  // Then check our tracked processes
   const tracked = activeProcesses.get('sync-daemon');
   if (tracked) {
     try {

@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "concurrently \"npm run dev:mcp\" \"npm run dev:sync\" \"npm run dev:cli\"",
     "dev:mcp": "tsx watch src/mcp-server/server.ts",
-    "dev:sync": "tsx watch src/sync-daemon/index.ts", 
+    "dev:sync": "tsx watch src/sync-daemon/daemon.ts", 
     "dev:cli": "tsx watch src/cli/index.ts",
     "build": "tsc && npm run build:copy",
     "build:copy": "cp -r scripts dist/ && cp -r docker dist/",
@@ -21,6 +21,8 @@
     "install-system": "node scripts/install.js",
     "register-mcp": "node scripts/register-mcp.js",
     "start": "node dist/cli/index.js start",
+    "start:daemon": "node dist/cli/index.js start --daemon",
+    "start:background": "node dist/cli/index.js start --background",
     "stop": "node dist/cli/index.js stop",
     "status": "node dist/cli/index.js status",
     "logs": "node dist/cli/index.js logs"

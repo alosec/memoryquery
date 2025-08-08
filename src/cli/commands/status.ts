@@ -80,8 +80,14 @@ export async function statusCommand(options?: {
     if (!processes.mcpServer) {
       status.health.issues.push('MCP server not running');
     }
-    if (processes.syncDaemon && !syncHealth.active) {
-      status.health.issues.push('Sync daemon not processing (possible zombie state)');
+    // Only flag as zombie if it's been idle for a while and there are recent files
+    if (processes.syncDaemon && !syncHealth.active && conversations.length > 0) {
+      const mostRecent = conversations[0];
+      const minutesOld = (Date.now() - mostRecent.modified.getTime()) / 1000 / 60;
+      if (minutesOld < 5) {
+        // Recent file exists but no activity - possible issue
+        status.health.issues.push('Sync daemon idle despite recent files (possible issue)');
+      }
     }
 
     // Output results
@@ -115,7 +121,7 @@ export async function statusCommand(options?: {
         if (syncHealth.active) {
           console.log(`  Activity: ${syncHealth.messagesChanged} messages in last second`);
         } else {
-          console.log(`  Activity: IDLE (${syncHealth.reason})`);
+          console.log(`  Activity: IDLE (watching for changes)`);
         }
       }
 

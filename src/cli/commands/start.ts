@@ -12,11 +12,14 @@ export async function startCommand(options: {
   projectsPath?: string;
   mcpOnly?: boolean;
   syncOnly?: boolean;
+  daemon?: boolean;
+  background?: boolean;
 }) {
   console.log('🚀 Starting Simple Memory MCP...');
   
   const dbPath = options.dbPath || path.join(os.homedir(), '.local/share/simple-memory/mcp.db');
   const projectsPath = options.projectsPath || path.join(os.homedir(), '.claude', 'projects');
+  const useDaemon = options.daemon || options.background || false;
   
   const results = {
     syncDaemon: { started: false, error: null as string | null },
@@ -36,7 +39,8 @@ export async function startCommand(options: {
         console.log('🔄 Starting sync daemon...');
         const syncResult = await startDaemon({
           dbPath,
-          projectsPath
+          projectsPath,
+          daemon: useDaemon
         });
         
         if (syncResult.success) {
@@ -81,24 +85,25 @@ export async function startCommand(options: {
     if (successCount === expectedCount) {
       console.log('🎉 All requested services started successfully');
       
-      // Set up graceful shutdown handlers
-      const shutdown = async (signal: string) => {
-        console.log(`\n👋 Received ${signal}, shutting down services...`);
+      // Only keep process alive if not in daemon mode and services were started in foreground
+      if (!useDaemon && successCount > 0 && !options.syncOnly) {
+        // Set up graceful shutdown handlers
+        const shutdown = async (signal: string) => {
+          console.log(`\n👋 Received ${signal}, shutting down services...`);
+          console.log('🛑 Use "npm stop" to stop services');
+          process.exit(0);
+        };
         
-        // Note: We don't import stopDaemon here to avoid sync-daemon import
-        // The processes will be cleaned up by the OS or manual stop command
-        console.log('🛑 Use "npm stop" to stop services');
-        process.exit(0);
-      };
-      
-      process.on('SIGINT', () => shutdown('SIGINT'));
-      process.on('SIGTERM', () => shutdown('SIGTERM'));
-      
-      // Keep process alive if services were started
-      if (successCount > 0) {
+        process.on('SIGINT', () => shutdown('SIGINT'));
+        process.on('SIGTERM', () => shutdown('SIGTERM'));
+        
         console.log('\n📝 Services running. Press Ctrl+C to stop.');
         // Keep the process running
         setInterval(() => {}, 1000 * 60 * 60); // Heartbeat every hour
+      } else if (useDaemon) {
+        console.log('\n✅ Services started in background mode');
+        console.log('💡 Use "npm run status" to check status');
+        console.log('💡 Use "npm stop" to stop services');
       }
       
       return 0;

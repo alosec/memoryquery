@@ -26,12 +26,14 @@ program
   .option('--projects-path <path>', 'Path to Claude Code projects directory')
   .option('--mcp-only', 'Start only MCP server, not sync daemon')
   .option('--sync-only', 'Start only sync daemon, not MCP server')
+  .option('--daemon', 'Run services in background/daemon mode')
+  .option('--background', 'Alias for --daemon')
   .action(async (options) => {
     const exitCode = await startCommand(options);
     if (exitCode !== 0) {
       process.exit(exitCode);
     }
-    // Note: startCommand keeps process alive if services started
+    // Note: startCommand keeps process alive if needed
   });
 
 program
