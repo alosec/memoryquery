@@ -200,32 +200,30 @@ function setupShutdownHandlers(): void {
 }
 
 /**
- * Get sync daemon status - completely isolated, no internal calls
+ * Get sync daemon status - DEPRECATED: Use external process validation instead
+ * 
+ * WARNING: This function relies on in-memory state that can be unreliable.
+ * For accurate status checking, use external validation like test/check-status.js
  */
 export async function getSyncDaemonStatus(): Promise<{
   running: boolean;
   health: any;
   config: SyncConfig;
 }> {
-  // COMPLETELY ISOLATED - no calls to sync daemon internals
-  let health;
-  if (isRunning) {
-    health = {
-      status: 'healthy' as const,
-      details: {
-        message: 'Sync daemon is running',
-        timestamp: new Date().toISOString()
-      }
-    };
-  } else {
-    health = { 
-      status: 'stopped' as const, 
-      details: { message: 'Sync daemon is not running' } 
-    };
-  }
+  // This function is now deprecated - it only reports in-memory state
+  // which can be misleading. External process validation is more reliable.
+  
+  const health = {
+    status: 'unknown' as const,
+    details: { 
+      message: 'Status check via in-memory flag (unreliable)',
+      recommendation: 'Use external process validation instead',
+      timestamp: new Date().toISOString()
+    }
+  };
 
   return {
-    running: isRunning,
+    running: isRunning, // This is just the in-memory flag, not actual process state
     health,
     config: DEFAULT_CONFIG
   };

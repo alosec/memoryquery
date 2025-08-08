@@ -2,11 +2,13 @@
 
 /**
  * CLI entry point for simple-memory-mcp
+ * IMPORTANT: This file must NOT import sync-daemon to avoid triggering sync during module loading
  */
 
 import { program } from 'commander';
-import { createMemoryServer } from '../mcp-server';
-import { startSyncDaemon, stopSyncDaemon, getSyncDaemonStatus } from '../sync-daemon';
+import { statusCommand } from './commands/status';
+import { startCommand } from './commands/start';
+import { stopCommand } from './commands/stop';
 import * as path from 'path';
 import * as os from 'os';
 
@@ -25,199 +27,105 @@ program
   .option('--mcp-only', 'Start only MCP server, not sync daemon')
   .option('--sync-only', 'Start only sync daemon, not MCP server')
   .action(async (options) => {
-    console.log('🚀 Starting Simple Memory MCP...');
-    
-    const promises: Promise<any>[] = [];
-    let mcpServer: any = null;
-    
-    try {
-      // Start MCP server unless sync-only mode
-      if (!options.syncOnly) {
-        console.log('📚 MCP server starting...');
-        mcpServer = createMemoryServer({
-          name: 'simple-memory-mcp',
-          version: '0.1.0',
-          dbPath: options.dbPath
-        });
-        
-        promises.push(mcpServer.start().then(() => {
-          console.log('✅ MCP server running');
-        }));
-      }
-      
-      // Start sync daemon unless mcp-only mode
-      if (!options.mcpOnly) {
-        console.log('🔄 Sync daemon starting...');
-        const syncConfig = {
-          dbPath: options.dbPath,
-          projectsPath: options.projectsPath
-        };
-        
-        promises.push(startSyncDaemon(syncConfig).then(() => {
-          console.log('✅ Sync daemon running');
-        }));
-      }
-      
-      // Wait for all services to start
-      await Promise.all(promises);
-      console.log('🎉 All services started successfully');
-      
-      // Set up graceful shutdown
-      const shutdown = async () => {
-        console.log('\n👋 Shutting down services...');
-        
-        try {
-          // Stop sync daemon if it was started
-          if (!options.mcpOnly) {
-            console.log('🔄 Stopping sync daemon...');
-            await stopSyncDaemon('shutdown_signal');
-            console.log('✅ Sync daemon stopped');
-          }
-          
-          // MCP server will be stopped by process exit
-          console.log('🛑 All services stopped');
-          process.exit(0);
-        } catch (error) {
-          console.error('❌ Error during shutdown:', error);
-          process.exit(1);
-        }
-      };
-      
-      process.on('SIGINT', shutdown);
-      process.on('SIGTERM', shutdown);
-      
-    } catch (error) {
-      console.error('❌ Failed to start:', error);
-      process.exit(1);
+    const exitCode = await startCommand(options);
+    if (exitCode !== 0) {
+      process.exit(exitCode);
     }
-  });
-
-program
-  .command('status')
-  .description('Check service status')
-  .action(async () => {
-    try {
-      const status = await getSyncDaemonStatus();
-      
-      // Simple, deterministic output
-      console.log(`Sync Daemon: ${status.running ? 'RUNNING' : 'STOPPED'}`);
-      
-      if (status.running && status.health) {
-        console.log(`Health: ${status.health.status.toUpperCase()}`);
-        
-        if (status.health.details?.database) {
-          const db = status.health.details.database;
-          console.log(`Database: ${db.accessible ? 'CONNECTED' : 'ERROR'}`);
-          console.log(`Records: ${db.recordCount || 0}`);
-        }
-        
-        if (status.health.details?.watcher) {
-          const watcher = status.health.details.watcher;
-          console.log(`File Watcher: ${watcher.active ? 'ACTIVE' : 'INACTIVE'}`);
-        }
-        
-        if (status.health.details?.syncLatency) {
-          const latency = status.health.details.syncLatency;
-          console.log(`Sync Latency: ${latency.recent || 'N/A'}ms (P95: ${latency.p95 || 'N/A'}ms)`);
-        }
-      } else {
-        console.log('Health: NOT_AVAILABLE');
-      }
-      
-      console.log('MCP Server: NOT_IMPLEMENTED');
-      
-    } catch (error) {
-      console.log('Sync Daemon: ERROR');
-      console.log(`Error: ${error instanceof Error ? error.message : String(error)}`);
-    }
+    // Note: startCommand keeps process alive if services started
   });
 
 program
   .command('stop')
   .description('Stop all services')
-  .action(async () => {
-    console.log('🛑 Stopping services...');
-    
-    try {
-      const status = await getSyncDaemonStatus();
-      
-      if (status.running) {
-        console.log('🔄 Stopping sync daemon...');
-        await stopSyncDaemon('manual_stop');
-        console.log('✅ Sync daemon stopped');
-      } else {
-        console.log('ℹ️  Sync daemon was not running');
-      }
-      
-      // TODO: Stop MCP server when status check available
-      console.log('ℹ️  MCP server stop not implemented yet');
-      
-    } catch (error) {
-      console.error('❌ Failed to stop services:', error);
-      process.exit(1);
-    }
+  .option('--force', 'Force stop services')
+  .action(async (options) => {
+    const exitCode = await stopCommand(options);
+    process.exit(exitCode);
+  });
+
+program
+  .command('status')
+  .description('Check service status')
+  .option('--json', 'Output status as JSON')
+  .option('--db-path <path>', 'Path to Claude Code database', DEFAULT_DB_PATH)
+  .option('--projects-path <path>', 'Path to Claude Code projects directory')
+  .action(async (options) => {
+    const exitCode = await statusCommand(options);
+    process.exit(exitCode);
   });
 
 program
   .command('logs')
   .description('View service logs')
-  .option('--lines <n>', 'Number of recent log lines to show', '50')
-  .option('--follow', 'Follow logs in real-time')
+  .option('--tail <lines>', 'Number of lines to show', '50')
+  .option('--follow', 'Follow log output')
   .action(async (options) => {
-    console.log('📋 Service Logs:');
+    console.log('📋 Viewing logs...');
+    
+    // Log files are typically in ~/.local/share/simple-memory/logs/
+    const logsPath = path.join(os.homedir(), '.local/share/simple-memory/logs');
+    
+    console.log(`Log directory: ${logsPath}`);
+    console.log('');
     
     try {
-      if (options.follow) {
-        console.log('ℹ️  Real-time log following not implemented yet');
-        console.log('ℹ️  Showing recent logs instead...\n');
+      const fs = await import('fs');
+      
+      if (!fs.existsSync(logsPath)) {
+        console.log('No logs directory found. Services may not have been started yet.');
+        process.exit(0);
       }
       
-      const { getRecentLogs } = await import('../sync-daemon/execute/transaction-log.js');
-      const logs = getRecentLogs(parseInt(options.lines));
+      const files = fs.readdirSync(logsPath).filter(f => f.endsWith('.log'));
       
-      if (logs.length === 0) {
-        console.log('ℹ️  No logs found');
-        return;
+      if (files.length === 0) {
+        console.log('No log files found.');
+        process.exit(0);
       }
       
-      for (const log of logs) {
-        const timestamp = log.timestamp.replace('T', ' ').replace('Z', '');
-        const level = log.level.toUpperCase().padEnd(5);
-        const event = log.event.padEnd(25);
+      console.log('Available log files:');
+      files.forEach(file => {
+        const stats = fs.statSync(path.join(logsPath, file));
+        console.log(`  - ${file} (${(stats.size / 1024).toFixed(1)} KB)`);
+      });
+      
+      // Show most recent log
+      const mostRecent = files.sort((a, b) => {
+        const statA = fs.statSync(path.join(logsPath, a));
+        const statB = fs.statSync(path.join(logsPath, b));
+        return statB.mtime.getTime() - statA.mtime.getTime();
+      })[0];
+      
+      if (mostRecent) {
+        console.log(`\nShowing last ${options.tail} lines from ${mostRecent}:`);
+        console.log('-'.repeat(50));
         
-        let line = `${timestamp} [${level}] ${event}`;
+        const content = fs.readFileSync(path.join(logsPath, mostRecent), 'utf-8');
+        const lines = content.split('\n');
+        const tailLines = lines.slice(-parseInt(options.tail));
         
-        // Add relevant context
-        if (log.data.sessionId) {
-          line += ` session=${log.data.sessionId.substring(0, 8)}`;
-        }
-        if (log.data.filePath) {
-          const filename = log.data.filePath.split('/').pop();
-          line += ` file=${filename}`;
-        }
-        if (log.data.messageCount !== undefined) {
-          line += ` messages=${log.data.messageCount}`;
-        }
+        console.log(tailLines.join('\n'));
         
-        // Color code by level
-        switch (log.level) {
-          case 'error':
-            console.log('\x1b[31m%s\x1b[0m', line); // Red
-            break;
-          case 'warn':
-            console.log('\x1b[33m%s\x1b[0m', line); // Yellow
-            break;
-          case 'debug':
-            console.log('\x1b[36m%s\x1b[0m', line); // Cyan
-            break;
-          default:
-            console.log(line);
+        if (options.follow) {
+          console.log('\n[Following log output - Press Ctrl+C to stop]');
+          // Simple tail -f implementation
+          const { spawn } = await import('child_process');
+          const tail = spawn('tail', ['-f', path.join(logsPath, mostRecent)]);
+          tail.stdout.pipe(process.stdout);
+          tail.stderr.pipe(process.stderr);
         }
       }
       
     } catch (error) {
-      console.error('❌ Failed to retrieve logs:', error);
+      console.error('Error reading logs:', error);
+      process.exit(1);
     }
   });
 
-program.parse();
+// Parse command line arguments
+program.parse(process.argv);
+
+// Show help if no command provided
+if (!process.argv.slice(2).length) {
+  program.outputHelp();
+}

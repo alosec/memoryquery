@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "concurrently \"npm run dev:mcp\" \"npm run dev:sync\" \"npm run dev:cli\"",
     "dev:mcp": "tsx watch src/mcp-server/server.ts",
-    "dev:sync": "tsx watch src/sync-daemon/daemon.ts", 
+    "dev:sync": "tsx watch src/sync-daemon/index.ts", 
     "dev:cli": "tsx watch src/cli/index.ts",
     "build": "tsc && npm run build:copy",
     "build:copy": "cp -r scripts dist/ && cp -r docker dist/",

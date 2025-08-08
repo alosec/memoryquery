@@ -118,22 +118,28 @@ Every architectural decision should be made through the lens of: "Is this the ri
 **Problem**: Multiple development and CLI commands hang or produce interactive behaviors that block testing and automation.
 
 **Requirements for ALL Commands**:
-- **Status command**: ❌ STILL BROKEN - `npm run status` produces 80k+ line outputs  
+- **Status command**: ✅ FIXED - `npm run status` now provides clean output in <5 seconds  
 - **Test Status**: ✅ WORKING - `npm run test:status` provides clean output
-- **Dev commands**: ❌ NEEDS FIX - `npm run dev:sync` hangs and captures attention
+- **Start command**: ❌ STILL INTERACTIVE - `npm start -- --sync-only` captures attention and blocks shell
 - **All CLI scripts**: Must be completely non-interactive
 - **Background processes**: Must detach properly and not block shell
 - **Error handling**: Must exit cleanly with proper codes, no hanging
 
 **Specific Issues Identified**:
-1. `npm run status` - STILL produces massive log outputs (CLI status broken)
-2. `npm run dev:sync` - hangs when run in background, blocks testing  
-3. Missing `daemon.ts` file causing module resolution errors
-4. Development commands must support headless operation
+1. ✅ `npm run status` - FIXED via CLI refactoring to external validation pattern
+2. ❌ `npm start` - Still captures attention, displays "Press Ctrl+C to stop" message
+3. ❌ `npm run dev:sync` - Still captures attention even with & background operator
+4. ✅ Package.json scripts - Fixed daemon.ts reference to index.ts
+5. ❌ All start/dev commands need proper daemon/background mode for non-interactive operation
 
-**Impact**: Cannot reliably run tests or development commands in automated environments. Critical for CI/CD and testing workflows.
+**Impact**: Cannot reliably run services in automated environments. Critical for CI/CD and testing workflows.
 
-**Solution Required**: All npm scripts must be non-interactive, support background execution, and provide clear exit codes.
+**Solution Required**: Start command needs `--daemon` or `--background` flag to detach from shell properly.
+
+**Testing Updates (August 2025)**:
+- Test suite timeout should be reduced from 10s to 5s per user preference for faster execution
+- Sync activity detected: Message count increased from 66556 to 66602 during CLI start attempts
+- Sync daemon may be working intermittently but not staying running persistently
    
 3. **Type Safety**: Multiple `any` types compromise TypeScript benefits
    - Audit all `any` usage in CLI, MCP server, and sync daemon
