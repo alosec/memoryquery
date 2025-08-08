@@ -17,10 +17,10 @@
 **CLI Interface:**
 - `commander`: ^12.0.0 - Command-line interface framework
 
-**Sync Daemon (PENDING):**
-- `better-sqlite3`: ^12.2.0 - High-performance SQLite bindings
-- `chokidar`: ^4.0.3 - Cross-platform file system watching
-- `uuid`: ^11.1.0 - Session ID generation
+**✅ Sync Daemon (COMPLETE):**
+- `better-sqlite3`: ^12.2.0 - High-performance SQLite bindings for database operations
+- `chokidar`: ^4.0.3 - Cross-platform file system watching with stability handling
+- `uuid`: ^11.1.0 - Session ID generation and message deduplication
 
 **✅ Development Tools:**
 - `tsx`: ^4.0.0 - TypeScript execution for development
@@ -35,22 +35,22 @@
 
 ## Database Architecture
 
-### SQLite Schema
-**Existing Claude Code Structure:**
+### SQLite Schema ✅ IMPLEMENTED
+**Simple Memory Database Structure** (`~/.local/share/simple-memory/mcp.db`):
 ```sql
-sessions (id, path, createdAt, lastActivityAt)
-messages (id, sessionId, type, timestamp, userText, assistantText, projectName)
-tool_uses (id, messageId, toolName, parameters)
-tool_use_results (id, toolUseId, output, error)
-attachments (id, messageId, filename, content)
-env_info (id, messageId, workingDir, gitBranch)
+sessions (id, path, created_at, last_activity_at)
+messages (id, session_id, type, timestamp, user_text, assistant_text, project_name)
+tool_uses (id, message_id, tool_name, parameters)
+tool_use_results (id, tool_use_id, output, error)
+attachments (id, message_id, filename, content)
+env_info (id, message_id, working_dir, git_branch, platform)
 ```
 
-**Access Patterns:**
-- **Read-only MCP**: Query conversation history safely
-- **Write-only Sync**: Update database from JSONL files
-- **WAL Mode**: Concurrent read/write operations
-- **Indexes**: Leverage existing Claude Code performance optimizations
+**✅ Access Patterns Implemented:**
+- **✅ Read-only MCP**: MCP server queries conversation history safely
+- **✅ Write-only Sync**: Sync daemon updates database from JSONL files with atomic transactions
+- **✅ WAL Mode**: Concurrent read/write operations enabled
+- **✅ Indexes**: Performance indexes on session_id, timestamp, message_id, tool_use_id
 
 ### Connection Management
 - **Single connection per service**: Simple and reliable
@@ -124,16 +124,16 @@ npm run register     # Register MCP server with Claude Code
 
 ### ✅ Configuration Management (IMPLEMENTED)
 **✅ Environment Variables:**
-- `CLAUDE_DB_PATH`: Path to Claude Code database (implemented with fallback)
-- `CLAUDE_PROJECTS_PATH`: Path to JSONL files [PENDING - for sync daemon]
+- `SIMPLE_MEMORY_DB_PATH`: Path to simple-memory database (defaults to ~/.local/share/simple-memory/mcp.db)
+- `CLAUDE_PROJECTS_PATH`: Path to JSONL files (implemented - defaults to ~/.claude/projects)
 - `LOG_LEVEL`: Logging verbosity [PENDING]
 - `SERVICE_PORT`: HTTP endpoint port [PENDING]
 
 **✅ Configuration Pattern**:
 ```typescript
-// Auto-detection with environment override
-const DEFAULT_DB_PATH = path.join(os.homedir(), '.local/share/cafe-db/claude_code.db');
-const dbPath = process.env.CLAUDE_DB_PATH || DEFAULT_DB_PATH;
+// Auto-detection with environment override (updated for separate database)
+const DEFAULT_DB_PATH = path.join(os.homedir(), '.local/share/simple-memory/mcp.db');
+const dbPath = process.env.SIMPLE_MEMORY_DB_PATH || DEFAULT_DB_PATH;
 ```
 
 **Config Files [PENDING]:**

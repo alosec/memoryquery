@@ -12,6 +12,14 @@ export class DatabaseConnection {
 
   constructor(dbPath: string) {
     this.db = new sqlite3.Database(dbPath, sqlite3.OPEN_READONLY);
+    
+    // Configure SQLite for WAL mode compatibility and concurrent access
+    this.db.run("PRAGMA journal_mode = WAL;");
+    this.db.run("PRAGMA synchronous = NORMAL;");
+    this.db.run("PRAGMA cache_size = 10000;");
+    this.db.run("PRAGMA temp_store = memory;");
+    this.db.run("PRAGMA busy_timeout = 10000;"); // 10 seconds
+    
     this.dbAll = promisify(this.db.all.bind(this.db));
     this.dbGet = promisify(this.db.get.bind(this.db));
   }
