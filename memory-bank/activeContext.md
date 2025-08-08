@@ -118,16 +118,18 @@ Every architectural decision should be made through the lens of: "Is this the ri
 **Problem**: Multiple development and CLI commands hang or produce interactive behaviors that block testing and automation.
 
 **Requirements for ALL Commands**:
-- **Status command**: ✅ FIXED - Now returns deterministic, fast response (<20 lines, <1 second)
+- **Status command**: ❌ STILL BROKEN - `npm run status` produces 80k+ line outputs  
+- **Test Status**: ✅ WORKING - `npm run test:status` provides clean output
 - **Dev commands**: ❌ NEEDS FIX - `npm run dev:sync` hangs and captures attention
 - **All CLI scripts**: Must be completely non-interactive
 - **Background processes**: Must detach properly and not block shell
 - **Error handling**: Must exit cleanly with proper codes, no hanging
 
 **Specific Issues Identified**:
-1. `npm run dev:sync` - hangs when run in background, blocks testing
-2. Missing `daemon.ts` file causing module resolution errors
-3. Development commands must support headless operation
+1. `npm run status` - STILL produces massive log outputs (CLI status broken)
+2. `npm run dev:sync` - hangs when run in background, blocks testing  
+3. Missing `daemon.ts` file causing module resolution errors
+4. Development commands must support headless operation
 
 **Impact**: Cannot reliably run tests or development commands in automated environments. Critical for CI/CD and testing workflows.
 
@@ -174,3 +176,38 @@ Every architectural decision should be made through the lens of: "Is this the ri
 - `npm run test:integrity` - Validate data accuracy
 
 The foundation is rebuilt with proper real-world validation approach.
+
+
+### 🔴 Critical Infrastructure Analysis: Zombie Sync Daemon (December 2024)
+
+**Contradictory Status Indicators Discovered:**
+1. Test Status: "Sync Daemon: NOT RUNNING"
+2. CLI Start: "Error: Sync daemon is already running"  
+3. Process Check: "Sync daemon process: FOUND"
+
+**Diagnosis**: Sync daemon in zombie state - process exists but not functional
+
+**Infrastructure Failures Identified:**
+- `npm run status`: Produces 80k+ lines of logs (broken)
+- `npm run test:status`: Works correctly with clean output
+- `npm run dev:sync`: References non-existent daemon.ts file
+- `npm start`: Can't start due to false "already running" detection
+
+**Functional State Analysis:**
+- ✅ Historical sync worked: 66,396+ messages prove past success
+- ✅ File detection works: 483 conversation files found
+- ✅ Database functional: 16.5MB, proper schema
+- ✅ MCP Server works: All 8 tools operational
+- ❌ Real-time sync broken: 0% processing of recent files
+- ❌ Process management broken: Can't cleanly stop/start
+
+**Root Cause**: Not a sync algorithm problem - it's an operational infrastructure failure. The sync daemon achieved historical success but is stuck in broken state with no recovery mechanism.
+
+**Critical Next Steps:**
+1. Kill zombie process manually
+2. Fix CLI command references in package.json
+3. Implement proper process management
+4. Add zombie detection and auto-recovery
+5. Unify status reporting systems
+
+See `zombie-state-analysis.md` for detailed analysis.
