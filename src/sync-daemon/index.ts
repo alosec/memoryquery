@@ -25,7 +25,11 @@ let shutdownPromise: Promise<void> | null = null;
  * Main sync daemon entry point
  */
 export async function main(config: Partial<SyncConfig> = {}): Promise<void> {
-  const syncConfig = { ...DEFAULT_CONFIG, ...config };
+  const syncConfig = { 
+    ...DEFAULT_CONFIG, 
+    ...config,
+    startTime: Date.now()
+  };
   
   logSyncStart(syncConfig);
   isRunning = true;
@@ -73,10 +77,21 @@ export async function main(config: Partial<SyncConfig> = {}): Promise<void> {
 
     // Keep the process alive
     await new Promise<void>((resolve) => {
+      let lastHealthLog = Date.now();
       const checkShutdown = () => {
         if (shutdownPromise) {
           shutdownPromise.then(resolve);
         } else {
+          // Log periodic health status every 30 seconds
+          const now = Date.now();
+          if (now - lastHealthLog > 30000) {
+            globalLogger.info('daemon_health_ping', {
+              uptime: Math.floor((now - syncConfig.startTime) / 1000),
+              watcherActive: isWatcherActive(),
+              pid: process.pid
+            });
+            lastHealthLog = now;
+          }
           setTimeout(checkShutdown, 1000);
         }
       };

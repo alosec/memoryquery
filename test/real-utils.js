@@ -179,26 +179,80 @@ function sleep(ms) {
 }
 
 /**
- * Measure sync latency for a real file modification
+ * Get latest timestamp from JSONL files
  */
-async function measureRealSyncLatency(filePath, timeout = 10000) {
-  const startTime = Date.now();
+function getLatestJsonlTimestamp() {
+  const conversations = findRealConversations();
+  let latestTimestamp = null;
+  let latestFile = null;
   
-  // Append a trackable message
-  const testMessage = appendToRealJsonl(filePath, {
-    user: `Latency test at ${new Date().toISOString()}`,
-    assistant: 'Measuring sync latency'
-  });
-  
-  // Poll for the message in the database
-  while (Date.now() - startTime < timeout) {
-    if (messageExistsInDb(testMessage.id)) {
-      return Date.now() - startTime;
+  for (const conv of conversations) {
+    try {
+      const content = fs.readFileSync(conv.path, 'utf8').trim();
+      if (!content) continue;
+      
+      const lines = content.split('\n');
+      const lastLine = lines[lines.length - 1];
+      
+      if (!lastLine.trim()) continue;
+      
+      const message = JSON.parse(lastLine);
+      if (!message.timestamp) continue;
+      
+      const timestamp = new Date(message.timestamp);
+      
+      if (!latestTimestamp || timestamp > latestTimestamp) {
+        latestTimestamp = timestamp;
+        latestFile = conv.name;
+      }
+    } catch (error) {
+      // Skip malformed files
+      continue;
     }
-    await sleep(50);
   }
   
-  return -1; // Timeout
+  return { timestamp: latestTimestamp, file: latestFile };
+}
+
+/**
+ * Get latest timestamp from database
+ */
+function getLatestDatabaseTimestamp() {
+  const dbPath = getDbPath();
+  
+  if (!fs.existsSync(dbPath)) {
+    return null;
+  }
+  
+  try {
+    const db = new Database(dbPath, { readonly: true });
+    
+    try {
+      const result = db.prepare(`
+        SELECT timestamp 
+        FROM messages 
+        ORDER BY timestamp DESC 
+        LIMIT 1
+      `).get();
+      
+      return result ? new Date(result.timestamp) : null;
+    } finally {
+      db.close();
+    }
+  } catch (error) {
+    return null;
+  }
+}
+
+/**
+ * Calculate sync lag in seconds
+ */
+function calculateSyncLag(jsonlTime, dbTime) {
+  if (!jsonlTime || !dbTime) {
+    return -1; // Missing data
+  }
+  
+  return Math.abs(jsonlTime.getTime() - dbTime.getTime()) / 1000;
 }
 
 /**
@@ -290,7 +344,9 @@ module.exports = {
   touchFile,
   appendToRealJsonl,
   sleep,
-  measureRealSyncLatency,
+  getLatestJsonlTimestamp,
+  getLatestDatabaseTimestamp,
+  calculateSyncLag,
   getDatabaseStats,
   validateSyncDaemonRunning
 };

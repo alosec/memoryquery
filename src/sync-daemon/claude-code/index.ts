@@ -178,16 +178,26 @@ export function startWatching(config?: SyncConfig): any {
   initializeDatabase();
 
   watcher = watchJsonl(async (event) => {
+    const eventStartTime = Date.now();
     globalLogger.info('file_event_received', { 
       event: event.event, 
-      filePath: event.filePath 
+      filePath: event.filePath,
+      timestamp: new Date().toISOString()
     });
 
     try {
       switch (event.event) {
         case 'add':
         case 'change':
+          const processStart = Date.now();
           await processJsonlFile(event.filePath);
+          const processDuration = Date.now() - processStart;
+          globalLogger.info('file_event_processed', {
+            event: event.event,
+            filePath: event.filePath,
+            duration: processDuration,
+            latency: Date.now() - eventStartTime
+          });
           break;
           
         case 'unlink':
@@ -199,7 +209,8 @@ export function startWatching(config?: SyncConfig): any {
       globalLogger.error('file_event_processing_error', {
         event: event.event,
         filePath: event.filePath,
-        error: error instanceof Error ? error.message : String(error)
+        error: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack : undefined
       });
     }
   }, {

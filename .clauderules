@@ -1,0 +1,59 @@
+# Simple Memory MCP - Project Rules
+
+## Test Architecture Patterns
+
+### Timestamp-Based Validation (PROVEN APPROACH)
+- **Use timestamp comparison**: Compare latest JSONL vs database timestamps
+- **No file modification**: Read-only tests that don't pollute conversation files
+- **No polling loops**: Avoid timeout-based tests that take 10+ seconds
+- **Reference implementation**: Based on working cafe-db-sync latency patterns
+
+### Clean Test Design
+- Tests should complete in seconds, not minutes
+- Use deterministic measurements, not probabilistic polling
+- Focus on real conversation data, not synthetic test files
+- Test actual user value: "Can users access their Claude Code conversations?"
+
+## Sync Daemon Debugging
+
+### Known Working Components
+- **Historical sync**: 66,684+ messages prove the sync engine works correctly
+- **MCP server**: All 8 tools operational with existing data
+- **Database operations**: Atomic transactions and schema working
+- **File detection**: 493 conversation files found correctly
+
+### Identified Issue
+- **Real-time monitoring failure**: 34+ hour lag between JSONL and database timestamps
+- **File watcher idle**: Chokidar goes idle after startup, not processing new files
+- **Process appears running**: Daemon process exists but not functional
+
+### Debug Strategy
+- Focus on file monitoring pipeline (chokidar configuration)
+- Check why watcher goes idle after processing historical files
+- Investigate glob patterns and polling settings
+- Transaction logs show "watcher_ready" but no subsequent events
+
+## Development Patterns
+
+### Architecture Priorities
+1. **MCP Server**: Core product for conversation history access
+2. **Sync Daemon**: Supporting component for real-time data freshness  
+3. **CLI Tools**: Service management and health monitoring
+4. **Installation**: Single-command setup (future priority)
+
+### Testing Priorities
+1. **Timestamp validation**: Primary health check methodology
+2. **Real data focus**: Test actual Claude Code conversations
+3. **System integration**: Validate end-to-end user workflows
+4. **Error resilience**: Handle malformed files gracefully
+
+### Code Quality
+- Use TypeScript strictly (eliminate `any` types)
+- Conventional commit format (feat:, fix:, docs:, etc.)
+- Environment-based configuration with sensible defaults
+- Transaction logging for debugging sync operations
+
+## Current Status (August 9, 2025)
+- **Phase**: Debug sync daemon file monitoring failure
+- **Test Suite**: Clean architecture implemented and working
+- **Next**: Investigate why chokidar watcher goes idle after startup

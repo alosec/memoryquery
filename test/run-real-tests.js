@@ -24,10 +24,10 @@ const tests = [
     description: 'Validates actual conversation file synchronization'
   },
   { 
-    name: 'Real Sync Latency', 
-    file: 'real-latency.js', 
+    name: 'Sync Latency', 
+    file: 'latency-timestamp.js', 
     critical: true,
-    description: 'Measures actual JSONL → DB latency'
+    description: 'Measures JSONL vs DB timestamp gap'
   },
   { 
     name: 'Data Integrity', 

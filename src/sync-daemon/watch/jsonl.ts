@@ -60,7 +60,8 @@ export function watchJsonl(
     // Continue anyway - directory might be created later
   }
 
-  // Configure chokidar watcher with battle-tested settings from cafe-db-sync
+  // Configure chokidar watcher - watch the entire projects directory
+  // and filter for .jsonl files in the event handlers
   const watcher = chokidar.watch(projectsPath, {
     // Stability configuration for file write completion
     awaitWriteFinish: config.awaitWriteFinish || {
@@ -70,10 +71,9 @@ export function watchJsonl(
     
     // Performance and reliability settings
     persistent: true,
-    ignoreInitial: false,      // Process existing files on startup
+    ignoreInitial: true,       // Don't process existing files (already done in initial sync)
     followSymlinks: false,
-    cwd: projectsPath,
-    depth: 2,                 // projects/project-name/file.jsonl
+    depth: 2,                  // projects/project-name/file.jsonl
     
     // File filtering
     ignored: [
@@ -83,35 +83,52 @@ export function watchJsonl(
       ...(config.ignored || [])
     ],
     
-    // Polling configuration (important for Docker/network volumes)
-    usePolling: process.env.NODE_ENV === 'production',
-    interval: 1000,           // Poll every 1s in production
-    binaryInterval: 5000      // Poll binary files every 5s
+    // Polling configuration - use polling for better file detection
+    usePolling: true,          // Always use polling for reliability
+    interval: 500,             // Poll every 500ms for faster detection
+    binaryInterval: 1000       // Poll binary files every 1s
   });
 
   // Set up event handlers
   watcher.on('ready', () => {
-    globalLogger.info('watcher_ready', { projectsPath });
+    globalLogger.info('watcher_ready', { 
+      projectsPath,
+      watchedPaths: watcher.getWatched()
+    });
+  });
+
+  watcher.on('all', (eventName, path, stats) => {
+    globalLogger.debug('watcher_all_event', { 
+      event: eventName, 
+      path,
+      isJsonl: path?.endsWith('.jsonl')
+    });
   });
 
   watcher.on('add', (filePath) => {
+    // Filter for .jsonl files
     if (filePath.endsWith('.jsonl')) {
-      logWatcherEvent('add', filePath);
-      callback({ event: 'add', filePath: join(projectsPath, filePath) });
+      const absolutePath = filePath.startsWith('/') ? filePath : join(projectsPath, filePath);
+      logWatcherEvent('add', absolutePath);
+      callback({ event: 'add', filePath: absolutePath });
     }
   });
 
   watcher.on('change', (filePath) => {
+    // Filter for .jsonl files
     if (filePath.endsWith('.jsonl')) {
-      logWatcherEvent('change', filePath);
-      callback({ event: 'change', filePath: join(projectsPath, filePath) });
+      const absolutePath = filePath.startsWith('/') ? filePath : join(projectsPath, filePath);
+      logWatcherEvent('change', absolutePath);
+      callback({ event: 'change', filePath: absolutePath });
     }
   });
 
   watcher.on('unlink', (filePath) => {
+    // Filter for .jsonl files
     if (filePath.endsWith('.jsonl')) {
-      logWatcherEvent('unlink', filePath);
-      callback({ event: 'unlink', filePath: join(projectsPath, filePath) });
+      const absolutePath = filePath.startsWith('/') ? filePath : join(projectsPath, filePath);
+      logWatcherEvent('unlink', absolutePath);
+      callback({ event: 'unlink', filePath: absolutePath });
     }
   });
 

@@ -278,28 +278,28 @@ This project aims to become the standard solution for AI conversation memory and
 - Complete suite runs in <30 seconds
 
 
-## ✅ Test Suite Implementation Complete (December 2024)
+## ✅ Test Suite Redesigned - Clean Architecture Complete (August 9, 2025)
 
-### Test Scripts Created
-Successfully implemented 8 non-interactive test scripts in `/test/` directory:
+### Clean Test Suite Implementation
+Successfully redesigned and implemented 6 focused test scripts in `/test/` directory:
 
-1. **Core Functionality Tests**:
-   - `sync-pipeline.js` - Verifies JSONL → database synchronization
-   - `mcp-query.js` - Tests MCP tool responses via stdio protocol
-   - `measure-latency.js` - Benchmarks sync performance (P50/P95 metrics)
+1. **Core System Tests**:
+   - `check-status.js` - System health check without triggering massive logs
+   - `latency-timestamp.js` - **NEW** - Proper timestamp comparison for sync lag measurement
+   - `real-sync-pipeline.js` - Conversation file synchronization validation
 
-2. **Data Integrity Tests**:
-   - `deduplication.js` - Ensures no duplicate messages in database
-   - `atomicity.js` - Verifies transaction safety for message + tool_uses
+2. **Data Validation Tests**:
+   - `real-data-integrity.js` - Source JSONL vs database content comparison
+   - `mcp-query.js` - All 8 MCP tools functionality testing
 
 3. **Error Handling Tests**:
+   - `deduplication.js` - Ensures no duplicate messages in database
    - `malformed-jsonl.js` - Tests resilience to corrupt/invalid input
-   - `large-file.js` - Bulk processing test with 1000 messages
 
 4. **Test Infrastructure**:
-   - `utils.js` - Shared helper functions
-   - `run-all.js` - Master test runner with summary reporting
-   - `README.md` - Test documentation
+   - `real-utils.js` - Enhanced with timestamp comparison utilities
+   - `run-real-tests.js` - Master test runner updated for new latency test
+   - `README.md` - Updated documentation for clean test architecture
 
 ### Implementation Characteristics
 - **Non-interactive execution** - All tests run without user input
@@ -309,17 +309,24 @@ Successfully implemented 8 non-interactive test scripts in `/test/` directory:
 - **No external dependencies** - Uses only existing package.json modules
 - **Fast execution target** - <30 seconds for complete suite
 
-### Package.json Updated
-Replaced Vitest configuration with direct Node.js test scripts:
+### Package.json Updated (August 9, 2025)
+Removed broken polling tests, updated with clean architecture:
 ```json
-"test": "node test/run-all.js",
-"test:sync": "node test/sync-pipeline.js",
+"test": "node test/run-real-tests.js",
+"test:status": "node test/check-status.js", 
+"test:sync": "node test/real-sync-pipeline.js",
+"test:latency": "node test/latency-timestamp.js",  // NEW - timestamp comparison
+"test:integrity": "node test/real-data-integrity.js",
 "test:mcp": "node test/mcp-query.js",
-"test:latency": "node test/measure-latency.js",
-"test:integrity": "...",
-"test:errors": "...",
-"test:quick": "..."
+"test:quick": "npm run test:status"
 ```
+
+### ✅ Breakthrough Test Results (August 9, 2025)
+**New timestamp-based latency test immediately revealed core issue**:
+- **Sync Lag**: 124,271 seconds (34.5 hours) between latest JSONL and database
+- **Historical Data**: 66,684 messages prove sync engine works
+- **Current Issue**: Real-time file monitoring has failed since August 8
+- **Clean Architecture**: Tests execute in seconds with deterministic results
 
 ## ⚠️ Test Execution Results - Critical Issues Discovered (August 8, 2025)
 

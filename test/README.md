@@ -1,8 +1,8 @@
-# Simple Memory MCP - Real Validation Tests
+# Simple Memory MCP - Test Suite
 
-## Philosophy Change
-**Old Approach**: Create synthetic test files → Validate processing
-**New Approach**: Use real conversation files → Validate actual sync
+## Clean Test Architecture
+**Approach**: Timestamp-based validation using real conversation data
+**Focus**: 6 essential tests that properly validate sync functionality
 
 ## Quick Start
 
@@ -10,7 +10,7 @@
 # Ensure you have real Claude Code conversations
 # Check ~/.claude/projects/ for .jsonl files
 
-# Start sync daemon (required)
+# Start sync daemon (optional - some tests work without it)
 npm run dev:sync
 
 # In another terminal, run validation tests
@@ -20,64 +20,67 @@ npm test
 ## Test Commands
 
 ```bash
-# Run all real validation tests
+# Run all validation tests
 npm test
 
 # Individual test commands
-npm run test:status      # Quick health check (no logs!)
-npm run test:sync        # Test real conversation sync
-npm run test:latency     # Measure actual sync latency
+npm run test:status      # Quick system health check
+npm run test:sync        # Test conversation file synchronization
+npm run test:latency     # Measure sync lag via timestamps
 npm run test:integrity   # Validate data accuracy
 npm run test:mcp         # Test MCP tool queries
 
 # Quick status check
 npm run test:quick
-
-# Run old synthetic tests (not recommended)
-npm run test:old
 ```
 
-## Real Validation Tests
+## Core Test Suite (6 Tests)
 
-### Core Tests (Critical)
-- `check-status.js` - Simple health check without triggering massive logs
-- `real-sync-pipeline.js` - Validates actual conversation file synchronization
-- `real-latency.js` - Measures real JSONL → Database latency
+### Essential Tests
+1. **`check-status.js`** - System health check without triggering massive logs
+2. **`latency-timestamp.js`** - Measures sync lag using JSONL vs database timestamp comparison
+3. **`real-sync-pipeline.js`** - Validates conversation file synchronization pipeline  
+4. **`real-data-integrity.js`** - Compares source JSONL with database content
+5. **`mcp-query.js`** - Tests all 8 MCP tools return correct data
+6. **`deduplication.js`** - Ensures no duplicate messages in database
 
-### Data Validation Tests
-- `real-data-integrity.js` - Compares source JSONL with database content
-- `mcp-query.js` - Tests MCP tool functionality with real data
+### Reliability Tests  
+- **`malformed-jsonl.js`** - Tests error handling for corrupted files
 
-## What These Tests Actually Validate
+## Test Validation Goals
 
-1. **Real Sync Pipeline**: 
-   - Finds actual Claude Code conversations
-   - Verifies they're being watched and synced
-   - Tests new message append detection
+1. **Timestamp Latency**:
+   - Compares latest JSONL timestamps with database timestamps
+   - Measures sync lag (healthy: <3s, acceptable: 3-10s) 
+   - No file modification required - pure timestamp comparison
 
-2. **Real Latency**:
-   - Measures actual time from file change to database
-   - Uses real conversation files of varying sizes
-   - Reports P50/P95 metrics for real workloads
+2. **Sync Pipeline**:
+   - Validates conversation files are being processed
+   - Tests real file detection and synchronization
+   - Confirms sync daemon functionality
 
 3. **Data Integrity**:
    - Compares source JSONL content with database
-   - Checks for missing messages
-   - Validates no data corruption
+   - Checks for missing or corrupted messages
+   - Validates accurate data synchronization
 
-4. **Status Check**:
-   - Reports health WITHOUT generating 80k lines of logs
-   - Simple, parseable output
-   - Quick validation of system state
+4. **MCP Functionality**:
+   - Tests all 8 conversation history tools
+   - Validates tools return correct data from database
+   - Confirms MCP server operational status
+
+5. **System Health**:
+   - Quick health check without triggering massive logs
+   - Database connectivity and statistics
+   - Process status validation
 
 ## Success Criteria
 
-- ✅ Real conversation files are synced to database
-- ✅ Sync latency P50 < 500ms on real files
-- ✅ Sync latency P95 < 2000ms on real files
-- ✅ >95% of messages successfully synced
-- ✅ No data corruption or loss
-- ✅ Status check completes in <1 second
+- ✅ Sync lag between JSONL and database <10 seconds
+- ✅ All conversation files detected and accessible
+- ✅ >95% of messages successfully synced without corruption
+- ✅ All MCP tools return accurate conversation data  
+- ✅ Status check completes quickly (<5 seconds)
 
 ## Prerequisites
 
@@ -116,14 +119,16 @@ npm run test:old
 - `2` - Critical tests failed (sync not working)
 - `3` - Test runner error
 
-## Key Difference from Old Tests
+## Architecture Improvements
 
-**Old tests created artificial data**:
-- Generated `test-1234.jsonl` files
-- Validated synthetic processing
-- Passing tests didn't mean real conversations worked
+**Previous Issues Resolved**:
+- ❌ Polling-based tests with 10+ second timeouts
+- ❌ File modification tests that polluted real conversation files  
+- ❌ Synthetic test data disconnected from real usage
+- ❌ Tests dependent on full sync pipeline timing
 
-**New tests validate real functionality**:
-- Use actual Claude Code conversations
-- Measure real performance metrics
-- Success means users can actually access their data
+**Current Clean Approach**:
+- ✅ Timestamp comparison for deterministic latency measurement
+- ✅ Read-only validation of real conversation data
+- ✅ Tests work independently without complex dependencies
+- ✅ Fast, reliable tests that complete in seconds

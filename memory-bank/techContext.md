@@ -116,11 +116,13 @@ npm run register     # Register MCP server with Claude Code
 - Output: dist/ with sourcemaps and declarations  
 - Strict type checking enabled
 
-### Testing Strategy
-- **Unit tests**: Individual component functionality
-- **Integration tests**: Service interaction verification
-- **Installation tests**: Full setup process validation
-- **Database tests**: Schema and query validation
+### ✅ Testing Strategy (REDESIGNED - August 9, 2025)
+- **✅ Timestamp Validation**: Direct JSONL vs database timestamp comparison
+- **✅ Real Data Tests**: Use actual Claude Code conversation files  
+- **✅ Read-Only Approach**: No file modification or polling timeouts
+- **✅ Clean Test Suite**: 6 focused tests with deterministic results
+
+**Test Architecture Success**: New approach immediately identified 34+ hour sync lag issue that polling tests couldn't detect.
 
 ### ✅ Configuration Management (IMPLEMENTED)
 **✅ Environment Variables:**
