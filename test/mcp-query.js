@@ -6,7 +6,7 @@
 
 const { spawn } = require('child_process');
 const path = require('path');
-const { readResponse, sleep } = require('./utils');
+const { readResponse, sleep } = require('./real-utils');
 
 async function testMCPQuery() {
   console.log('TEST: MCP Tool Queries');

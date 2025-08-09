@@ -61,7 +61,7 @@ simple-memory logs              # View service logs
 
 ## Data Flow Patterns
 
-### Real-Time Sync Pattern ✅ IMPLEMENTED
+### Real-Time Sync Pattern ❌ BROKEN
 **Pattern**: Event-driven synchronization with reliability guarantees
 **Architecture**:
 ```
@@ -70,8 +70,8 @@ JSONL Files → File Watcher → Parser → SQLite Database → ✅ MCP Tools
   Changes      Detect      Transform    Update         ✅ Query
 ```
 
-**✅ Complete Pipeline**: Watch-Transform-Execute implemented following cafe-db-sync patterns
-**✅ All Components Working**: File watching, parsing, and database update operational
+**❌ Incomplete Pipeline**: Watch-Transform-Execute fails at watch stage - chokidar monitoring stops
+**❌ File Watching Broken**: Parsing and database work, but file monitoring goes idle after initial sync
 
 **✅ Implemented Reliability Features**:
 - **✅ Atomic Updates**: Database transactions with retry logic ensure consistency
@@ -79,7 +79,7 @@ JSONL Files → File Watcher → Parser → SQLite Database → ✅ MCP Tools
 - **✅ Health Checks**: CLI status and logs provide sync monitoring
 - **✅ Mutex Coordination**: Database locks prevent concurrent write conflicts
 
-**Next Phase**: Comprehensive unit testing and performance optimization
+**❌ BROKEN**: Real-time sync fails - watcher goes idle after startup, 169+ second lag
 
 ### Database Access Pattern ✅ IMPLEMENTED
 **Pattern**: Read-write separation with safe concurrent access
@@ -143,7 +143,7 @@ simple-memory status --detailed
 5. **MCP Functionality**: `mcp-query.js` - All 8 tools operational testing
 6. **Error Handling**: `deduplication.js`, `malformed-jsonl.js` - Reliability tests
 
-**Breakthrough Results**: New tests immediately identified 34+ hour sync lag, proving historical sync worked but real-time monitoring failed.
+**Partial Results**: Tests identified path resolution bug, partial fix implemented, but core issue remains - watcher still goes idle, causing 169+ second lag.
 
 ### Documentation Pattern
 **Pattern**: Clear documentation that enables adoption

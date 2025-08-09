@@ -71,7 +71,7 @@ export function watchJsonl(
     
     // Performance and reliability settings
     persistent: true,
-    ignoreInitial: false,      // Process existing files for unified bootstrap+continuous sync
+    ignoreInitial: true,       // Don't process existing files (handled in initial sync)
     followSymlinks: false,
     depth: 2,                  // projects/project-name/file.jsonl
     

@@ -1,8 +1,8 @@
 # Active Context
 
-## Current Status: Test Suite Redesigned, Sync Daemon Debug Phase ✨
+## Current Status: Real-Time Sync STILL BROKEN ❌ - Core Issue Unresolved
 
-The simple-memory-mcp project has successfully implemented all core components (MCP server, sync daemon, CLI) and has **completely redesigned the test suite** to use proper timestamp-based validation. The clean test suite has revealed the core issue: sync daemon processes historical data but fails on real-time file monitoring.
+The simple-memory-mcp project has **NOT resolved the critical real-time sync failure**. While we fixed a path resolution bug that enabled some sync activity, the core issue persists: the chokidar file watcher goes idle after initial processing. Current sync lag: 169+ seconds and increasing.
 
 ## Project Genesis (August 8, 2025)
 
@@ -65,12 +65,26 @@ simple-memory-mcp/
 **Not in Scope**: General sync engines, complex multi-database systems, or pipeline transformations beyond what's needed for MCP functionality.
 
 ### 🎯 Current Development Focus (August 9, 2025)
-1. **✅ Sync Daemon Infrastructure**: Complete Watch-Transform-Execute pipeline implemented
+1. **✅ Sync Daemon Infrastructure**: Complete Watch-Transform-Execute pipeline implemented but NOT working reliably
 2. **✅ Test Suite Redesigned**: Clean timestamp-based validation approach implemented
-3. **⚠️ Critical Issue Identified**: Real-time sync failure (34.5 hour lag) with working historical data
-4. **📋 Next: Sync Daemon Debug**: Investigate file monitoring pipeline failure
+3. **❌ CRITICAL ISSUE PERSISTS**: Real-time sync broken (169s+ lag, watcher goes idle after startup)
+4. **🚨 URGENT: File Monitoring Failure**: Chokidar watcher stops detecting new changes after initial sync
 
-**Immediate Priority**: Debug why file watcher goes idle after startup, preventing real-time JSONL processing
+**Critical Priority**: Fix core file watcher idle issue - sync daemon cannot maintain continuous monitoring
+
+## 🚨 URGENT Development Tasks (August 9, 2025)
+
+### Critical Issues Requiring Immediate Resolution
+1. **Fix File Watcher Idle State**: Chokidar stops monitoring after initial sync completion
+2. **Debug Watcher Lifecycle**: Understand why file monitoring becomes inactive
+3. **Implement Watcher Health Monitoring**: Detect and restart idle watchers automatically
+4. **Alternative Monitoring Approach**: Consider polling or inotify if chokidar unreliable
+
+### Root Cause Investigation
+- Chokidar watcher goes idle after processing initial files
+- Dual-mode sync (initial + continuous) not working reliably
+- File monitoring stops despite daemon process remaining active
+- Need robust solution for continuous JSONL file monitoring
 
 ### Integration Strategy for Sync Daemon
 - **Purpose**: Ensure MCP server has fresh conversation data from Claude Code JSONL files
@@ -141,15 +155,15 @@ Every architectural decision should be made through the lens of: "Is this the ri
 - ✅ **Process Management**: Clean start/stop/restart with proper background mode support
 - ✅ **Architecture Isolation**: CLI completely separated from sync-daemon imports, no zombie processes
 
-**Real-Time Sync Issue Identified (August 2025)**:
-- ❌ **Sync Not Working**: All latency tests timeout (>10s), proving real-time sync is broken
-- ✅ **Process Running**: Daemon starts properly, processes historical files during initial sync
-- ❌ **File Monitoring Failed**: Watcher goes idle after startup, not detecting new JSONL changes
-- 📊 **Evidence**: Transaction log shows "watcher_ready" but no subsequent file processing events
+**❌ Real-Time Sync Issue PERSISTS (August 2025)**:
+- ❌ **Sync BROKEN**: Latest latency tests show 169+ second lag and increasing
+- ✅ **Process Running**: Daemon starts properly but stops processing after initial sync
+- ❌ **File Monitoring FAILED**: Path resolution helped initially but watcher still goes idle
+- 📊 **Evidence**: Database timestamp stuck at 18:30:41, JSONL advancing to 18:33:31
 
-**Next Phase Required: Core Sync Engine Debug**
-- Infrastructure is solid, but core file monitoring/processing pipeline needs investigation
-- Real-time sync completely non-functional despite proper daemon management
+**Current Phase: Core Issue Debug Required**
+- File watcher consistently stops working after startup sync completes
+- Need fundamental fix to chokidar monitoring or alternative approach
    
 3. **Type Safety**: Multiple `any` types compromise TypeScript benefits
    - Audit all `any` usage in CLI, MCP server, and sync daemon
@@ -176,10 +190,10 @@ Every architectural decision should be made through the lens of: "Is this the ri
 5. `mcp-query.js` - All 8 MCP tools functionality
 6. `deduplication.js` + `malformed-jsonl.js` - Error handling tests
 
-**✅ Critical Issue Properly Identified**:
-- **Latest JSONL**: August 9, 2025 17:58 (recent Claude Code activity)
-- **Latest DB**: August 8, 2025 07:26 (sync stopped working)
-- **Sync Lag**: 124,271 seconds (34.5 hours) - definitively confirms real-time sync failure
+**❌ Critical Issue UNRESOLVED**:
+- **Latest JSONL**: August 9, 2025 18:33:31 (recent Claude Code activity)
+- **Latest DB**: August 9, 2025 18:30:41 (sync stopped working)
+- **Sync Lag**: 169+ seconds and increasing - real-time sync broken
 
 **Test Architecture Success**:
 - ✅ **No file modification** - Read-only validation approach

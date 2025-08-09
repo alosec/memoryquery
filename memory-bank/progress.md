@@ -182,12 +182,12 @@ class OpenAIAPIParser implements LogParser { }
 - **Cross-platform**: Linux, macOS, Windows support
 - **Service integration**: Auto-register with Claude Code MCP
 
-### Runtime Performance (SYNC DAEMON OPERATIONAL)
-- **Sync functionality**: ✅ Working - processes JSONL files and populates database
-- **Error handling**: ⚠️ Parse errors logged but gracefully handled for malformed JSONL
-- **Database operations**: ✅ Atomic transactions with retry logic working
-- **File watching**: ✅ Real-time monitoring active with chokidar
-- **Performance metrics**: 📊 Need formal benchmarking (next phase)
+### ❌ Runtime Performance (SYNC DAEMON UNRELIABLE)
+- **Sync functionality**: ❌ Broken - real-time JSONL processing stops after initial sync
+- **Error handling**: ✅ Parse errors logged and gracefully handled for malformed JSONL
+- **Database operations**: ✅ Atomic transactions with retry logic working perfectly
+- **File watching**: ❌ Real-time monitoring fails - chokidar watcher goes idle consistently
+- **Performance metrics**: 🚨 169+ second sync lag - core monitoring broken
 
 ### Developer Experience
 - **Clear documentation**: Easy to understand and extend
@@ -321,12 +321,12 @@ Removed broken polling tests, updated with clean architecture:
 "test:quick": "npm run test:status"
 ```
 
-### ✅ Breakthrough Test Results (August 9, 2025)
-**New timestamp-based latency test immediately revealed core issue**:
-- **Sync Lag**: 124,271 seconds (34.5 hours) between latest JSONL and database
-- **Historical Data**: 66,684 messages prove sync engine works
-- **Current Issue**: Real-time file monitoring has failed since August 8
-- **Clean Architecture**: Tests execute in seconds with deterministic results
+### ❌ Partial Fix Results - Core Issue Remains (August 9, 2025)
+**Path resolution bug fix enabled some sync but didn't solve core problem**:
+- **Sync Lag**: 169+ seconds and increasing (NOT resolved)
+- **Database Growth**: Stopped at 67,234 messages (sync idle after initial processing)
+- **Partial Fix**: Chokidar path concatenation bug helped initially
+- **Core Issue**: File watcher goes idle after startup - continuous monitoring broken
 
 ## ⚠️ Test Execution Results - Critical Issues Discovered (August 8, 2025)
 

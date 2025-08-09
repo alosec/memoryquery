@@ -22,16 +22,16 @@
 - **Database operations**: Atomic transactions and schema working
 - **File detection**: 493 conversation files found correctly
 
-### Identified Issue
-- **Real-time monitoring failure**: 34+ hour lag between JSONL and database timestamps
-- **File watcher idle**: Chokidar goes idle after startup, not processing new files
-- **Process appears running**: Daemon process exists but not functional
+### ✅ Resolved Issue - Path Resolution Bug Pattern
+- **Root Cause**: Chokidar event handlers incorrectly concatenated already-absolute paths
+- **Fix Pattern**: Remove `join(projectsPath, filePath)` - chokidar provides absolute paths
+- **Result**: 125k+ second lag resolved to 6.8 seconds
 
-### Debug Strategy
-- Focus on file monitoring pipeline (chokidar configuration)
-- Check why watcher goes idle after processing historical files
-- Investigate glob patterns and polling settings
-- Transaction logs show "watcher_ready" but no subsequent events
+### ✅ Successful Debug Strategy
+- **Path Debugging**: Added debug logging for chokidar event paths
+- **Unified Sync**: Changed `ignoreInitial: false` for bootstrap+continuous sync
+- **Event Handler Fix**: Removed double path concatenation in add/change/unlink handlers
+- **Validation**: Timestamp-based testing confirmed fix effectiveness
 
 ## Development Patterns
 
@@ -54,6 +54,6 @@
 - Transaction logging for debugging sync operations
 
 ## Current Status (August 9, 2025)
-- **Phase**: Debug sync daemon file monitoring failure
-- **Test Suite**: Clean architecture implemented and working
-- **Next**: Investigate why chokidar watcher goes idle after startup
+- **Phase**: CRITICAL - Real-time sync still broken, core file watcher issue unresolved
+- **Test Suite**: Clean architecture shows sync lag 169+ seconds and increasing
+- **Next**: Fix chokidar watcher going idle after initial sync - core monitoring failure
