@@ -26,8 +26,9 @@ program
   .option('--projects-path <path>', 'Path to Claude Code projects directory')
   .option('--mcp-only', 'Start only MCP server, not sync daemon')
   .option('--sync-only', 'Start only sync daemon, not MCP server')
-  .option('--daemon', 'Run services in background/daemon mode')
+  .option('--daemon', 'Run services in background/daemon mode (default)')
   .option('--background', 'Alias for --daemon')
+  .option('--interactive', 'Run services in foreground interactive mode')
   .action(async (options) => {
     const exitCode = await startCommand(options);
     if (exitCode !== 0) {
@@ -59,67 +60,36 @@ program
 program
   .command('logs')
   .description('View service logs')
-  .option('--tail <lines>', 'Number of lines to show', '50')
-  .option('--follow', 'Follow log output')
+  .option('-n, --lines <lines>', 'Number of lines to show (default: 50)', '50')
+  .option('-f, --follow', 'Follow log output continuously')
+  .option('--sync', 'Show only sync daemon logs')
+  .option('--mcp', 'Show only MCP server logs')
   .action(async (options) => {
-    console.log('📋 Viewing logs...');
-    
-    // Log files are typically in ~/.local/share/simple-memory/logs/
-    const logsPath = path.join(os.homedir(), '.local/share/simple-memory/logs');
-    
-    console.log(`Log directory: ${logsPath}`);
-    console.log('');
-    
     try {
-      const fs = await import('fs');
-      
-      if (!fs.existsSync(logsPath)) {
-        console.log('No logs directory found. Services may not have been started yet.');
-        process.exit(0);
+      const { logsCommand } = await import('./commands/logs');
+      const exitCode = await logsCommand(options);
+      if (!options.follow) {
+        process.exit(exitCode);
       }
-      
-      const files = fs.readdirSync(logsPath).filter(f => f.endsWith('.log'));
-      
-      if (files.length === 0) {
-        console.log('No log files found.');
-        process.exit(0);
-      }
-      
-      console.log('Available log files:');
-      files.forEach(file => {
-        const stats = fs.statSync(path.join(logsPath, file));
-        console.log(`  - ${file} (${(stats.size / 1024).toFixed(1)} KB)`);
-      });
-      
-      // Show most recent log
-      const mostRecent = files.sort((a, b) => {
-        const statA = fs.statSync(path.join(logsPath, a));
-        const statB = fs.statSync(path.join(logsPath, b));
-        return statB.mtime.getTime() - statA.mtime.getTime();
-      })[0];
-      
-      if (mostRecent) {
-        console.log(`\nShowing last ${options.tail} lines from ${mostRecent}:`);
-        console.log('-'.repeat(50));
-        
-        const content = fs.readFileSync(path.join(logsPath, mostRecent), 'utf-8');
-        const lines = content.split('\n');
-        const tailLines = lines.slice(-parseInt(options.tail));
-        
-        console.log(tailLines.join('\n'));
-        
-        if (options.follow) {
-          console.log('\n[Following log output - Press Ctrl+C to stop]');
-          // Simple tail -f implementation
-          const { spawn } = await import('child_process');
-          const tail = spawn('tail', ['-f', path.join(logsPath, mostRecent)]);
-          tail.stdout.pipe(process.stdout);
-          tail.stderr.pipe(process.stderr);
-        }
-      }
-      
+      // If following, keep process alive
     } catch (error) {
-      console.error('Error reading logs:', error);
+      console.error('Error loading logs command:', error);
+      process.exit(1);
+    }
+  });
+
+program
+  .command('reset')
+  .description('Reset the database (WARNING: deletes all data)')
+  .option('--force', 'Skip confirmation prompt and reset immediately')
+  .option('--db-path <path>', 'Path to database to reset', DEFAULT_DB_PATH)
+  .action(async (options) => {
+    try {
+      const { resetCommand } = await import('./commands/reset');
+      await resetCommand(options);
+      process.exit(0);
+    } catch (error) {
+      console.error('Error in reset command:', error);
       process.exit(1);
     }
   });

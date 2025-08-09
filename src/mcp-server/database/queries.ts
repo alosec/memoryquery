@@ -4,6 +4,7 @@
 
 import { DatabaseConnection } from './connection';
 import { buildCursorConditions, getCursorOrdering, createMessageCursor } from './cursor-utils';
+import { ProjectPathMapper } from '../utils/path-mapper';
 import type {
   DatabaseSchema,
   ConversationMessage,
@@ -48,21 +49,20 @@ export class DatabaseQueries {
     const sql = `
       SELECT 
         m.id,
-        m.sessionId,
+        m.session_id as sessionId,
         m.type,
         m.timestamp,
-        m.userText,
-        m.assistantText,
-        m.projectName,
-        m.activeFile,
-        tu.toolName,
+        m.user_text as userText,
+        m.assistant_text as assistantText,
+        m.project_name as projectName,
+        tu.tool_name as toolName,
         tu.parameters as toolParams,
         tur.output as toolOutput,
         tur.error as toolError
       FROM messages m
-      LEFT JOIN tool_uses tu ON m.id = tu.messageId
-      LEFT JOIN tool_use_results tur ON tu.id = tur.toolUseId
-      WHERE m.sessionId IN (${placeholders})
+      LEFT JOIN tool_uses tu ON m.id = tu.message_id
+      LEFT JOIN tool_use_results tur ON tu.id = tur.tool_use_id
+      WHERE m.session_id IN (${placeholders})
       ${cursorCondition.condition}
       ${getCursorOrdering(direction, 'm.timestamp', 'm.id')}
       LIMIT ?
@@ -105,12 +105,12 @@ export class DatabaseQueries {
     const { sessionIds, limit = 10, cursor, direction = 'before' } = options;
     
     const searchConditions = queries.map(() => `
-      (m.userText LIKE ? OR m.assistantText LIKE ? OR 
+      (m.user_text LIKE ? OR m.assistant_text LIKE ? OR 
        tu.parameters LIKE ? OR tur.output LIKE ?)
     `).join(' AND ');
     
     const sessionFilter = sessionIds?.length 
-      ? `AND m.sessionId IN (${sessionIds.map(() => '?').join(',')})`
+      ? `AND m.session_id IN (${sessionIds.map(() => '?').join(',')})`
       : '';
 
     // Build cursor conditions
@@ -119,18 +119,17 @@ export class DatabaseQueries {
     const sql = `
       SELECT 
         m.id,
-        m.sessionId,
+        m.session_id as sessionId,
         m.type,
         m.timestamp,
-        m.userText,
-        m.assistantText,
-        m.projectName,
-        m.activeFile,
-        tu.toolName,
+        m.user_text as userText,
+        m.assistant_text as assistantText,
+        m.project_name as projectName,
+        tu.tool_name as toolName,
         tur.output as toolOutput
       FROM messages m
-      LEFT JOIN tool_uses tu ON m.id = tu.messageId
-      LEFT JOIN tool_use_results tur ON tu.id = tur.toolUseId
+      LEFT JOIN tool_uses tu ON m.id = tu.message_id
+      LEFT JOIN tool_use_results tur ON tu.id = tur.tool_use_id
       WHERE ${searchConditions} ${sessionFilter} ${cursorCondition.condition}
       ${getCursorOrdering(direction, 'm.timestamp', 'm.id')}
       LIMIT ?
@@ -171,33 +170,45 @@ export class DatabaseQueries {
   async getSessionList(options: SessionListOptions = {}): Promise<PaginatedResponse<Session>> {
     const { projectPath, limit = 10, cursor, direction = 'before' } = options;
     
-    const projectFilter = projectPath ? 'WHERE s.sessionPath LIKE ?' : '';
+    // Use enhanced project path filtering
+    const pathFilter = projectPath 
+      ? ProjectPathMapper.buildProjectPathFilter(projectPath)
+      : { whereClause: '', params: [] };
+    
+    const projectFilter = pathFilter.whereClause.replace('AND', 'WHERE');
     
     // For sessions, we'll use the lastActivity timestamp for cursor pagination
     // First, get the base query results
     const sql = `
       SELECT 
-        s.sessionId,
-        s.sessionPath,
-        s.created,
+        s.id as sessionId,
+        s.path as sessionPath,
+        s.created_at as created,
         COUNT(m.id) as messageCount,
         MAX(m.timestamp) as lastActivity,
-        m.projectName
+        m.project_name
       FROM sessions s
-      LEFT JOIN messages m ON s.sessionId = m.sessionId
+      LEFT JOIN messages m ON s.id = m.session_id
       ${projectFilter}
-      GROUP BY s.sessionId
+      GROUP BY s.id
       HAVING 1=1 ${cursor ? `AND MAX(m.timestamp) ${direction === 'before' ? '<' : '>'} ?` : ''}
       ORDER BY lastActivity ${direction === 'before' ? 'DESC' : 'ASC'}
       LIMIT ?
     `;
     
-    let params = [];
-    if (projectPath) params.push(`%${projectPath}%`);
+    // Build parameters array maintaining proper types for SQLite
+    const params: (string | number)[] = [];
+    
+    // Add path filter parameters (strings for WHERE clause)
+    params.push(...pathFilter.params);
+    
+    // Add cursor parameter if present (string timestamp)
     if (cursor) {
       const { timestamp } = JSON.parse(Buffer.from(cursor, 'base64').toString('utf8'));
       params.push(timestamp);
     }
+    
+    // Add limit parameter (number for LIMIT clause)
     params.push(limit);
     
     const results = await this.db.all(sql, params);
@@ -233,7 +244,7 @@ export class DatabaseQueries {
     const { toolNames, sessionIds, limit = 5, cursor, direction = 'before' } = options;
     
     const sessionFilter = sessionIds?.length 
-      ? `AND m.sessionId IN (${sessionIds.map(() => '?').join(',')})`
+      ? `AND m.session_id IN (${sessionIds.map(() => '?').join(',')})`
       : '';
 
     // Build cursor conditions
@@ -242,12 +253,12 @@ export class DatabaseQueries {
     const sql = `
       SELECT 
         m.id,
-        m.sessionId,
+        m.session_id as sessionId,
         m.timestamp,
-        m.userText,
-        m.projectName
+        m.user_text,
+        m.project_name
       FROM messages m
-      WHERE m.userText LIKE '%"tool_result"%'
+      WHERE m.user_text LIKE '%"tool_result"%'
       ${sessionFilter} ${cursorCondition.condition}
       ${getCursorOrdering(direction, 'm.timestamp', 'm.id')}
       LIMIT ?
@@ -338,7 +349,7 @@ export class DatabaseQueries {
     const { filePaths, sessionIds, limit = 5, cursor, direction = 'before' } = options;
     
     const sessionFilter = sessionIds?.length 
-      ? `AND m.sessionId IN (${sessionIds.map(() => '?').join(',')})`
+      ? `AND m.session_id IN (${sessionIds.map(() => '?').join(',')})`
       : '';
 
     // Build cursor conditions
@@ -347,15 +358,15 @@ export class DatabaseQueries {
     const sql = `
       SELECT 
         m.id,
-        m.sessionId,
+        m.session_id as sessionId,
         m.timestamp,
-        m.userText,
-        m.projectName
+        m.user_text,
+        m.project_name
       FROM messages m
-      WHERE m.userText LIKE '%"tool_result"%' AND (
-        m.userText LIKE '%→%' OR 
-        m.userText LIKE '%file has been updated%' OR
-        m.userText LIKE '%Applied%'
+      WHERE m.user_text LIKE '%"tool_result"%' AND (
+        m.user_text LIKE '%→%' OR 
+        m.user_text LIKE '%file has been updated%' OR
+        m.user_text LIKE '%Applied%'
       )
       ${sessionFilter} ${cursorCondition.condition}
       ${getCursorOrdering(direction, 'm.timestamp', 'm.id')}
@@ -464,8 +475,12 @@ export class DatabaseQueries {
       includeToolUse = true 
     } = options;
 
-    // Build filters
-    const projectFilter = projectPath ? 'AND s.sessionPath LIKE ?' : '';
+    // Build filters using enhanced project path filtering
+    const pathFilter = projectPath 
+      ? ProjectPathMapper.buildProjectPathFilter(projectPath)
+      : { whereClause: '', params: [] };
+    const projectFilter = pathFilter.whereClause;
+    
     const typeFilter = messageTypes?.length 
       ? `AND m.type IN (${messageTypes.map(() => '?').join(',')})`
       : '';
@@ -476,14 +491,14 @@ export class DatabaseQueries {
     // Tool use joins
     const toolJoins = includeToolUse 
       ? `
-        LEFT JOIN tool_uses tu ON m.id = tu.messageId
-        LEFT JOIN tool_use_results tur ON tu.id = tur.toolUseId
+        LEFT JOIN tool_uses tu ON m.id = tu.message_id
+        LEFT JOIN tool_use_results tur ON tu.id = tur.tool_use_id
       `
       : '';
     
     const toolFields = includeToolUse 
       ? `
-        tu.toolName,
+        tu.tool_name as toolName,
         tu.parameters as toolParams,
         tur.output as toolOutput,
         tur.error as toolError,
@@ -493,17 +508,16 @@ export class DatabaseQueries {
     const sql = `
       SELECT 
         m.id,
-        m.sessionId,
+        m.session_id as sessionId,
         m.type,
         m.timestamp,
-        m.userText,
-        m.assistantText,
-        m.projectName,
-        m.activeFile,
+        m.user_text as userText,
+        m.assistant_text as assistantText,
+        m.project_name as projectName,
         ${toolFields}
-        s.sessionPath
+        s.path
       FROM messages m
-      JOIN sessions s ON m.sessionId = s.sessionId
+      JOIN sessions s ON m.session_id = s.id
       ${toolJoins}
       WHERE 1=1 
       ${projectFilter}
@@ -553,22 +567,21 @@ export class DatabaseQueries {
     const sql = `
       SELECT 
         m.id,
-        m.sessionId,
+        m.session_id as sessionId,
         m.type,
         m.timestamp,
-        m.userText,
-        m.assistantText,
-        m.projectName,
-        m.activeFile,
-        tu.toolName,
+        m.user_text as userText,
+        m.assistant_text as assistantText,
+        m.project_name as projectName,
+        tu.tool_name as toolName,
         tu.parameters as toolParams,
         tur.output as toolOutput,
         tur.error as toolError
       FROM messages m
-      JOIN sessions s ON m.sessionId = s.sessionId
-      LEFT JOIN tool_uses tu ON m.id = tu.messageId
-      LEFT JOIN tool_use_results tur ON tu.id = tur.toolUseId
-      WHERE s.sessionPath LIKE ?
+      JOIN sessions s ON m.session_id = s.id
+      LEFT JOIN tool_uses tu ON m.id = tu.message_id
+      LEFT JOIN tool_use_results tur ON tu.id = tur.tool_use_id
+      WHERE s.path LIKE ?
       ORDER BY m.timestamp DESC
       LIMIT ?
     `;

@@ -233,7 +233,6 @@ function insertMessage(db: Database.Database, message: any, logger: TransactionL
   const existing = db.prepare('SELECT id FROM messages WHERE id = ?').get(message.id);
   
   if (existing) {
-    logger.log('message_duplicate', { messageId: message.id });
     return false;
   }
 
@@ -263,7 +262,6 @@ function insertToolUse(db: Database.Database, toolUse: any, logger: TransactionL
   const existing = db.prepare('SELECT id FROM tool_uses WHERE id = ?').get(toolUse.id);
   
   if (existing) {
-    logger.log('tool_use_duplicate', { toolUseId: toolUse.id });
     return false;
   }
 
@@ -284,7 +282,6 @@ function insertToolResult(db: Database.Database, toolResult: any, logger: Transa
   const existing = db.prepare('SELECT id FROM tool_use_results WHERE id = ?').get(toolResult.id);
   
   if (existing) {
-    logger.log('tool_result_duplicate', { toolResultId: toolResult.id });
     return false;
   }
 

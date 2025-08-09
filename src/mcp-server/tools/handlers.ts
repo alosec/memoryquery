@@ -3,6 +3,7 @@
  */
 
 import { DatabaseQueries } from '../database/queries';
+import { ProjectPathMapper } from '../utils/path-mapper';
 
 export class ToolHandlers {
   constructor(private queries: DatabaseQueries) {}
@@ -65,8 +66,13 @@ export class ToolHandlers {
    * Handle get_session_list tool request
    */
   async handleGetSessionList(args: any) {
+    // Normalize project path to support multiple input formats
+    const normalizedPath = args.project_path 
+      ? ProjectPathMapper.normalizeProjectPath(args.project_path as string)
+      : null;
+    
     const sessions = await this.queries.getSessionList({
-      projectPath: args.project_path as string,
+      projectPath: normalizedPath?.queryPattern,
       limit: args.limit as number,
       cursor: args.cursor as string,
       direction: args.direction as 'before' | 'after'
@@ -121,11 +127,16 @@ export class ToolHandlers {
    * Handle get_recent_messages tool request
    */
   async handleGetRecentMessages(args: any) {
+    // Normalize project path to support multiple input formats
+    const normalizedPath = args.project_path 
+      ? ProjectPathMapper.normalizeProjectPath(args.project_path as string)
+      : null;
+    
     const result = await this.queries.getRecentMessages({
       limit: args.limit as number,
       cursor: args.cursor as string,
       direction: args.direction as 'before' | 'after',
-      projectPath: args.project_path as string,
+      projectPath: normalizedPath?.queryPattern,
       messageTypes: args.message_types as ('user' | 'assistant' | 'summary')[],
       includeToolUse: args.include_tool_use as boolean
     });
@@ -141,8 +152,11 @@ export class ToolHandlers {
    * Handle get_recent_messages_by_project tool request
    */
   async handleGetRecentMessagesByProject(args: any) {
+    // Normalize project path to support multiple input formats
+    const normalizedPath = ProjectPathMapper.normalizeProjectPath(args.project_path as string);
+    
     const messages = await this.queries.getRecentMessagesByProject(
-      args.project_path as string,
+      normalizedPath.queryPattern,
       args.limit as number
     );
     return {

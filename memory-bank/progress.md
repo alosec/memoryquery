@@ -176,18 +176,39 @@ class OpenAIAPIParser implements LogParser { }
 - **✅ CLI interface**: Functional service management commands
 - **✅ Package structure**: Proper dependencies and build scripts
 
+### ✅ MCP Integration (ENHANCED - August 9, 2025)
+- **✅ MCP Server Operational**: All 8 conversation history tools working
+- **✅ Real Conversation Access**: MCP tools returning actual user/assistant message content
+- **✅ Cross-Session Search**: Can find and retrieve messages across different chat sessions
+- **✅ Tool Integration**: Successfully integrated with Claude Code MCP protocol
+- **✅ Enhanced Project Path Support**: Three intuitive formats for project queries implemented
+
+### ✅ North Star 1: Project Path UX - COMPLETED (August 9, 2025)
+**Major Achievement**: Solved the project path parameter user experience problem
+
+**✅ Implementation Details**:
+- **New utility**: `src/mcp-server/utils/path-mapper.ts` - handles all path format conversions
+- **Enhanced schemas**: Updated parameter descriptions in all relevant MCP tools
+- **Smart handlers**: Automatic path format detection and normalization
+- **Database flexibility**: Enhanced query logic supports multiple path matching strategies
+- **Full testing**: All three formats verified working with real project data
+
+**✅ User Experience Transformation**:
+- **Before**: Users had to guess cryptic encoded format (`-home-alex-code-simple-memory-mcp`)
+- **After**: Users can use natural formats (`simple-memory-mcp` or `/home/alex/code/simple-memory-mcp`)
+
 ### Installation Experience (PENDING)
 - **Single command setup**: `curl -sSL install-url | bash`
 - **Zero configuration**: Auto-detect and configure everything
 - **Cross-platform**: Linux, macOS, Windows support
 - **Service integration**: Auto-register with Claude Code MCP
 
-### ❌ Runtime Performance (SYNC DAEMON UNRELIABLE)
-- **Sync functionality**: ❌ Broken - real-time JSONL processing stops after initial sync
+### ✅ Runtime Performance (OPERATIONAL)
+- **Sync functionality**: ✅ Working - real-time JSONL processing active and returning current conversation data
 - **Error handling**: ✅ Parse errors logged and gracefully handled for malformed JSONL
 - **Database operations**: ✅ Atomic transactions with retry logic working perfectly
-- **File watching**: ❌ Real-time monitoring fails - chokidar watcher goes idle consistently
-- **Performance metrics**: 🚨 169+ second sync lag - core monitoring broken
+- **File watching**: ✅ Real-time monitoring functional - MCP tools returning recent conversation content
+- **Performance metrics**: ✅ Sync operational - MCP tools accessing current session data successfully
 
 ### Developer Experience
 - **Clear documentation**: Easy to understand and extend
@@ -210,6 +231,35 @@ class OpenAIAPIParser implements LogParser { }
 - **Documentation**: Comprehensive guides and tutorials
 
 This project aims to become the standard solution for AI conversation memory and analysis, starting with Claude Code but growing into a comprehensive ecosystem.
+
+## 📚 Critical Reference Documentation
+
+### Claude Code JSONL Format and Masquerading Problem
+The following external documents contain essential patterns and analysis for solving the strategic north star issues:
+
+#### **`/home/alex/code/cafe/cafe-db-sync/memory-bank/cc-jsonl.md`**
+**Primary reference for masquerading problem**
+- **3 message types**: summary, user, assistant
+- **"User" masquerade pattern**: Tool results appear as user messages with `toolUseResult` metadata  
+- **Task sidechains**: Multi-threading behavior and UUID correlation patterns
+- **Tool taxonomy**: Complete list of Claude Code tool types
+
+#### **`/home/alex/code/cafedelic/docs/claude_code_logs.md`**
+**Complete Claude Code logging system documentation**
+- **Session log structure**: Full JSONL format specification
+- **Tool usage detection**: Patterns for identifying file operations
+- **Shell command analysis**: Extracting operations from bash commands
+- **File path extraction**: Methods for parsing file operations from tool usage
+
+### Why These Documents Are Critical
+1. **Solve Tool Usage Parsing**: The masquerading problem requires understanding how Claude Code formats tool results as user messages
+2. **Complete JSONL Parsing**: Proper implementation needs the full message structure patterns
+3. **Proven Patterns**: These represent working implementations that have successfully parsed Claude Code logs
+
+### Integration Strategy
+- **Extract core patterns** without importing technical debt
+- **Apply masquerading detection** to fix tool usage history queries
+- **Enhance project path handling** based on working directory resolution patterns
 
 ## 📋 Testing Development Plan Created (December 2024)
 

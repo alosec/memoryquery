@@ -61,7 +61,7 @@ simple-memory logs              # View service logs
 
 ## Data Flow Patterns
 
-### Real-Time Sync Pattern ❌ BROKEN
+### Real-Time Sync Pattern ✅ WORKING  
 **Pattern**: Event-driven synchronization with reliability guarantees
 **Architecture**:
 ```
@@ -70,8 +70,8 @@ JSONL Files → File Watcher → Parser → SQLite Database → ✅ MCP Tools
   Changes      Detect      Transform    Update         ✅ Query
 ```
 
-**❌ Incomplete Pipeline**: Watch-Transform-Execute fails at watch stage - chokidar monitoring stops
-**❌ File Watching Broken**: Parsing and database work, but file monitoring goes idle after initial sync
+**✅ Pipeline Operational**: Watch-Transform-Execute working - MCP tools returning current conversation data
+**✅ Database Sync Working**: JSONL parsing, content extraction, and database updates functional
 
 **✅ Implemented Reliability Features**:
 - **✅ Atomic Updates**: Database transactions with retry logic ensure consistency
@@ -79,7 +79,51 @@ JSONL Files → File Watcher → Parser → SQLite Database → ✅ MCP Tools
 - **✅ Health Checks**: CLI status and logs provide sync monitoring
 - **✅ Mutex Coordination**: Database locks prevent concurrent write conflicts
 
-**❌ BROKEN**: Real-time sync fails - watcher goes idle after startup, 169+ second lag
+**⚠️ Two Strategic Issues Remain**:
+1. **Project Path Parameter Design**: Current encoded naming not intuitive for users
+2. **Tool Usage Parsing**: "Masquerading" problem affects tool usage history queries
+
+### Project Path Parameter Pattern ✅ SOLVED
+**Pattern**: Flexible project path mapping supporting multiple user input formats
+**✅ Enhanced Implementation**: Intelligent format detection and conversion
+
+**✅ Supported Input Formats**:
+```
+1. Simple name: "simple-memory-mcp"                    # Most intuitive
+2. Full path:   "/home/alex/code/simple-memory-mcp"    # Natural for filesystem users  
+3. Encoded:     "-home-alex-code-simple-memory-mcp"    # Backward compatibility
+```
+
+**✅ Architecture Solution**:
+- **ProjectPathMapper utility class**: Handles all format conversions and detection
+- **Smart normalization**: Automatic input format detection in tool handlers
+- **Database query flexibility**: Enhanced WHERE clause generation based on input format
+- **Type safety**: Proper TypeScript typing for mixed SQL parameter types
+
+**Implementation Location**: `src/mcp-server/utils/path-mapper.ts`
+
+### Claude Code Message "Masquerading" Pattern ⚠️ PARSING ISSUE
+**Pattern**: Tool results disguised as user messages in Claude Code JSONL format
+**Architecture Challenge**:
+```
+Assistant → tool_use message
+System    → tool_result data BUT formatted as "user" message type
+```
+
+**Impact**: Standard user/assistant parsing fails to identify tool usage properly
+**Evidence**: Tool usage history queries return empty despite tool data in database  
+
+**Critical Reference Documentation**:
+- **`/home/alex/code/cafe/cafe-db-sync/memory-bank/cc-jsonl.md`**: Key patterns for the "masquerading" problem
+  - Documents how tool results appear as user messages with `toolUseResult` metadata
+  - Shows the 3 message types: summary, user, assistant
+  - Explains "User" masquerade pattern and threading behavior
+- **`/home/alex/code/cafedelic/docs/claude_code_logs.md`**: Comprehensive Claude Code log format analysis
+  - Complete JSONL structure documentation
+  - Tool usage detection patterns
+  - File operation parsing strategies
+
+**Solution Required**: Enhanced parsing that recognizes tool result messages masquerading as user messages
 
 ### Database Access Pattern ✅ IMPLEMENTED
 **Pattern**: Read-write separation with safe concurrent access

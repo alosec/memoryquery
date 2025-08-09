@@ -122,7 +122,7 @@ npm run register     # Register MCP server with Claude Code
 - **✅ Read-Only Approach**: No file modification or polling timeouts
 - **✅ Clean Test Suite**: 6 focused tests with deterministic results
 
-**Test Architecture Success**: New approach identified path resolution bug causing 34+ hour sync lag. Bug fixed - sync now operational.
+**Test Architecture Success**: New approach identified path resolution bug. Bug fixed - sync now operational and MCP tools working with real conversation data.
 
 ### ✅ Configuration Management (IMPLEMENTED)
 **✅ Environment Variables:**
@@ -159,10 +159,28 @@ const dbPath = process.env.SIMPLE_MEMORY_DB_PATH || DEFAULT_DB_PATH;
 
 ### Performance Characteristics
 **✅ Achieved Metrics:**
-- **Sync latency**: 6.8 seconds for JSONL updates (was 35+ hours) - targeting <3s
-- **Query response**: < 100ms for typical MCP requests
+- **MCP Tools**: All 8 tools operational and returning real conversation data
+- **Query response**: < 100ms for typical MCP requests (conversation search, message retrieval)
 - **Memory usage**: < 50MB per service
 - **CPU usage**: < 5% during normal operation
+- **Data Access**: Successfully returning user/assistant messages from current and historical sessions
+
+**✅ Strategic Issue Resolved and ⚠️ Remaining Challenge:**
+1. **✅ Project Path UX**: SOLVED - Enhanced project path support with three intuitive input formats
+2. **⚠️ Tool Usage Parsing**: Strategic uncertainty about approach to masquerading problem
+
+**✅ New Architecture Component Added**:
+- **`src/mcp-server/utils/path-mapper.ts`**: Project path conversion utilities
+- **Enhanced database queries**: Flexible project path matching logic
+- **Updated tool schemas**: Multi-format parameter documentation
+
+**⚠️ Tool Usage Masquerading Problem**:
+**Question**: Do we fix tool usage synchronization or restructure the approach entirely?
+**Reference Documentation**:
+- **`/home/alex/code/cafe/cafe-db-sync/memory-bank/cc-jsonl.md`**: Core patterns and message type analysis
+- **`/home/alex/code/cafedelic/docs/claude_code_logs.md`**: Complete Claude Code JSONL format documentation
+
+**Key Uncertainty**: Whether standalone tool usage queries provide sufficient value vs. integrated conversational tool context
 
 ### Security Considerations
 - **Read-only database access** for MCP server

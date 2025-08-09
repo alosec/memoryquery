@@ -20,11 +20,14 @@
     "install-system": "node scripts/install.js",
     "register-mcp": "node scripts/register-mcp.js",
     "start": "node dist/cli/index.js start",
+    "start:interactive": "node dist/cli/index.js start --interactive",
     "start:daemon": "node dist/cli/index.js start --daemon",
     "start:background": "node dist/cli/index.js start --background",
     "stop": "node dist/cli/index.js stop",
     "status": "node dist/cli/index.js status",
-    "logs": "node dist/cli/index.js logs"
+    "logs": "node dist/cli/index.js logs",
+    "reset": "node dist/cli/index.js reset",
+    "reset:force": "node dist/cli/index.js reset --force"
   },
   "bin": {
     "simple-memory": "./dist/cli/index.js"

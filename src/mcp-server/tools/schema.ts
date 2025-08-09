@@ -85,7 +85,7 @@ export const TOOL_SCHEMAS = [
       properties: {
         project_path: {
           type: 'string',
-          description: 'Optional: filter sessions by project path'
+          description: 'Optional: filter sessions by project path. Supports multiple formats: simple names ("simple-memory-mcp"), real paths ("/home/user/project"), or encoded paths ("-home-user-project")'
         },
         limit: {
           type: 'number',
@@ -199,7 +199,7 @@ export const TOOL_SCHEMAS = [
         },
         project_path: {
           type: 'string',
-          description: 'Optional: filter by project path'
+          description: 'Optional: filter by project path. Supports multiple formats: simple names ("simple-memory-mcp"), real paths ("/home/user/project"), or encoded paths ("-home-user-project")'
         },
         message_types: {
           type: 'array',
@@ -226,7 +226,7 @@ export const TOOL_SCHEMAS = [
       properties: {
         project_path: {
           type: 'string',
-          description: 'Project path to filter by'
+          description: 'Project path to filter by. Supports multiple formats: simple names ("simple-memory-mcp"), real paths ("/home/user/project"), or encoded paths ("-home-user-project")'
         },
         limit: {
           type: 'number',

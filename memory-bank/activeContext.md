@@ -1,8 +1,58 @@
 # Active Context
 
-## Current Status: Real-Time Sync STILL BROKEN ❌ - Core Issue Unresolved
+## Current Status: ✅ MCP TOOLS WORKING - Two Strategic North Stars Identified
 
-The simple-memory-mcp project has **NOT resolved the critical real-time sync failure**. While we fixed a path resolution bug that enabled some sync activity, the core issue persists: the chokidar file watcher goes idle after initial processing. Current sync lag: 169+ seconds and increasing.
+**Major Success (August 9, 2025):**
+- **✅ MCP Server**: Successfully built, installed, and operational with Claude Code
+- **✅ Database Sync**: JSONL parsing and content extraction working - database contains real conversation content
+- **✅ Tools Functional**: Memory MCP tools returning meaningful conversation data from recent sessions
+- **✅ Content Access**: Can retrieve user and assistant messages with actual text content
+- **✅ Search Working**: Can find messages across sessions with content search
+
+## 🎯 Strategic North Stars Status Update
+
+### ✅ North Star 1: Intuitive Project Path Parameters - COMPLETED
+**Problem Solved**: Users can now use intuitive project path parameters instead of cryptic encoded names.
+
+**✅ Three Formats Now Supported**:
+1. **✅ Simple project name**: `simple-memory-mcp` (most intuitive)
+2. **✅ Full filesystem paths**: `/home/alex/code/simple-memory-mcp` (natural for users)  
+3. **✅ Original encoded format**: `-home-alex-code-simple-memory-mcp` (backward compatibility)
+
+**✅ Implementation Complete**:
+- **ProjectPathMapper utility**: Handles conversion between all three formats
+- **Enhanced MCP tool schemas**: Updated parameter descriptions document all supported formats
+- **Handler normalization**: Intelligent path detection and conversion in tool handlers
+- **Database query enhancement**: Flexible matching logic for different path formats
+- **✅ Tested and Working**: All three formats successfully query the same project data
+
+### ⚠️ North Star 2: Tool Usage Masquerading Problem - STRATEGIC UNCERTAINTY
+**Problem**: Tool usage history queries return empty results due to Claude Code's complex message structure patterns.
+
+**Technical Issue**: Claude Code formats tool results as "user" messages with `toolUseResult` metadata, creating a "masquerading" pattern where:
+- Assistant sends tool_use
+- System responds with tool_result but **formatted as user message**  
+- Standard parsing fails to identify tool usage properly
+
+**🤔 Strategic Decision Point**: Multiple approaches under consideration:
+
+**Option A: Fix the Masquerading Problem**
+- Implement enhanced parsing to detect tool results disguised as user messages
+- Fix tool usage history synchronization in database pipeline
+- Maintain dedicated tool usage MCP tools
+
+**Option B: Restructure Approach**
+- Focus on conversation content interleaved with tool usage (more natural)
+- Possibly deprecate standalone tool usage queries 
+- Integrate tool information into main conversation flow
+
+**Current Uncertainty**: Not clear if isolated "tool usage history" queries are actually valuable vs. seeing tools in conversational context.
+
+**Reference Documentation**: 
+- **Core masquerading patterns**: `/home/alex/code/cafe/cafe-db-sync/memory-bank/cc-jsonl.md`
+- **Detailed Claude Code log analysis**: `/home/alex/code/cafedelic/docs/claude_code_logs.md`
+
+**Database Population Question**: Unclear if tool usage data is even being synchronized correctly to destination database - requires investigation.
 
 ## Project Genesis (August 8, 2025)
 
@@ -65,26 +115,26 @@ simple-memory-mcp/
 **Not in Scope**: General sync engines, complex multi-database systems, or pipeline transformations beyond what's needed for MCP functionality.
 
 ### 🎯 Current Development Focus (August 9, 2025)
-1. **✅ Sync Daemon Infrastructure**: Complete Watch-Transform-Execute pipeline implemented but NOT working reliably
-2. **✅ Test Suite Redesigned**: Clean timestamp-based validation approach implemented
-3. **❌ CRITICAL ISSUE PERSISTS**: Real-time sync broken (169s+ lag, watcher goes idle after startup)
-4. **🚨 URGENT: File Monitoring Failure**: Chokidar watcher stops detecting new changes after initial sync
+1. **✅ MCP Server Complete**: All 8 tools working, schema fixed, installed with project scope
+2. **✅ Database Access**: Real-time message retrieval operational (current session data accessible)
+3. **❌ NEW CRITICAL ISSUE**: Message content fields (userText, assistantText) not populated during sync
+4. **❌ Data Transformation Problem**: Sync daemon metadata working but conversation content missing
 
-**Critical Priority**: Fix core file watcher idle issue - sync daemon cannot maintain continuous monitoring
+**Critical Priority**: Fix sync daemon content population - message text not being extracted from JSONL and stored in database
 
 ## 🚨 URGENT Development Tasks (August 9, 2025)
 
 ### Critical Issues Requiring Immediate Resolution
-1. **Fix File Watcher Idle State**: Chokidar stops monitoring after initial sync completion
-2. **Debug Watcher Lifecycle**: Understand why file monitoring becomes inactive
-3. **Implement Watcher Health Monitoring**: Detect and restart idle watchers automatically
-4. **Alternative Monitoring Approach**: Consider polling or inotify if chokidar unreliable
+1. **Fix Content Field Population**: userText and assistantText fields are null despite metadata sync working
+2. **Debug JSONL Content Parsing**: Message IDs/timestamps sync but conversation text missing
+3. **Investigate Data Transformation**: Schema mapping may not be extracting message content correctly
+4. **Validate Sync Pipeline**: Ensure Watch → Transform → Execute properly processes JSONL message content
 
-### Root Cause Investigation
-- Chokidar watcher goes idle after processing initial files
-- Dual-mode sync (initial + continuous) not working reliably
-- File monitoring stops despite daemon process remaining active
-- Need robust solution for continuous JSONL file monitoring
+### Root Cause Investigation  
+- Message records created with correct metadata (IDs, timestamps, session data)
+- Content fields (user_text, assistant_text) consistently null across all messages
+- MCP server database access working perfectly - issue is in sync daemon content extraction
+- Need to examine JSONL parsing and database insertion of actual conversation text
 
 ### Integration Strategy for Sync Daemon
 - **Purpose**: Ensure MCP server has fresh conversation data from Claude Code JSONL files

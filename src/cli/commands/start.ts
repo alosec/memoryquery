@@ -14,12 +14,13 @@ export async function startCommand(options: {
   syncOnly?: boolean;
   daemon?: boolean;
   background?: boolean;
+  interactive?: boolean;
 }) {
   console.log('🚀 Starting Simple Memory MCP...');
   
   const dbPath = options.dbPath || path.join(os.homedir(), '.local/share/simple-memory/mcp.db');
   const projectsPath = options.projectsPath || path.join(os.homedir(), '.claude', 'projects');
-  const useDaemon = options.daemon || options.background || false;
+  const useDaemon = options.interactive ? false : (options.daemon || options.background || true); // Default to daemon mode unless interactive requested
   
   const results = {
     syncDaemon: { started: false, error: null as string | null },
@@ -85,7 +86,7 @@ export async function startCommand(options: {
     if (successCount === expectedCount) {
       console.log('🎉 All requested services started successfully');
       
-      // Only keep process alive if not in daemon mode and services were started in foreground
+      // Only keep process alive if explicitly requested to run in interactive mode
       if (!useDaemon && successCount > 0 && !options.syncOnly) {
         // Set up graceful shutdown handlers
         const shutdown = async (signal: string) => {
@@ -98,11 +99,13 @@ export async function startCommand(options: {
         process.on('SIGTERM', () => shutdown('SIGTERM'));
         
         console.log('\n📝 Services running. Press Ctrl+C to stop.');
+        console.log('💡 Use "npm run start:daemon" for background mode');
         // Keep the process running
         setInterval(() => {}, 1000 * 60 * 60); // Heartbeat every hour
-      } else if (useDaemon) {
-        console.log('\n✅ Services started in background mode');
+      } else {
+        console.log('✅ Services started in background mode');
         console.log('💡 Use "npm run status" to check status');
+        console.log('💡 Use "npm run logs" to view recent output');
         console.log('💡 Use "npm stop" to stop services');
       }
       

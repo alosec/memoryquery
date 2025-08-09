@@ -94,15 +94,35 @@ function transformMessage(message: ClaudeCodeMessage, sessionId: string): Databa
       };
       
     case 'user':
+      const userText = message.userText ?? extractTextFromContent(message.content) ?? undefined;
+      if (process.env.DEBUG_CONTENT && !userText && message.content) {
+        console.debug('USER_CONTENT_DEBUG:', { 
+          messageId: baseMessage.id,
+          hasUserText: !!message.userText,
+          hasContent: !!message.content,
+          contentLength: Array.isArray(message.content) ? message.content.length : 'not array',
+          contentTypes: Array.isArray(message.content) ? message.content.map(c => c?.type) : 'not array'
+        });
+      }
       return {
         ...baseMessage,
-        user_text: message.userText || extractTextFromContent(message.content) || undefined
+        user_text: userText
       };
       
     case 'assistant':
+      const assistantText = message.assistantText ?? extractTextFromContent(message.content) ?? undefined;
+      if (process.env.DEBUG_CONTENT && !assistantText && message.content) {
+        console.debug('ASSISTANT_CONTENT_DEBUG:', { 
+          messageId: baseMessage.id,
+          hasAssistantText: !!message.assistantText,
+          hasContent: !!message.content,
+          contentLength: Array.isArray(message.content) ? message.content.length : 'not array',
+          contentTypes: Array.isArray(message.content) ? message.content.map(c => c?.type) : 'not array'
+        });
+      }
       return {
         ...baseMessage,
-        assistant_text: message.assistantText || extractTextFromContent(message.content) || undefined
+        assistant_text: assistantText
       };
       
     default:

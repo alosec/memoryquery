@@ -78,7 +78,25 @@ export function parseJsonlLine(line: string, lineNumber?: number): ClaudeCodeMes
       parsed.fallback_id = `line_${lineNumber || Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
     }
 
-    return parsed as ClaudeCodeMessage;
+    // CRITICAL FIX: Handle Claude Code message wrapper structure
+    // Claude Code wraps content in a "message" property: {type:"user", message:{role:"user", content:"..."}}
+    const result = { ...parsed };
+    
+    if (parsed.message) {
+      // Extract content from the wrapped message structure
+      if (parsed.message.content) {
+        result.content = Array.isArray(parsed.message.content) 
+          ? parsed.message.content 
+          : [{ type: 'text', text: parsed.message.content }];
+      }
+      
+      // Extract other message properties
+      if (parsed.message.role) result.role = parsed.message.role;
+      if (parsed.message.cost_usd !== undefined) result.cost_usd = parsed.message.cost_usd;
+      if (parsed.message.usage) result.usage = parsed.message.usage;
+    }
+
+    return result as ClaudeCodeMessage;
   } catch (error) {
     throw new Error(`Invalid JSON${lineNumber ? ` at line ${lineNumber}` : ''}: ${error instanceof Error ? error.message : String(error)}`);
   }
@@ -129,8 +147,9 @@ export function validateMessage(message: any): ClaudeCodeMessage {
     
     case 'user':
     case 'assistant':
-      if (!message.content || !Array.isArray(message.content)) {
-        throw new Error(`${message.type} message missing or invalid content array`);
+      // Content is now optional since some messages may only have text
+      if (message.content && !Array.isArray(message.content)) {
+        throw new Error(`${message.type} message has invalid content array`);
       }
       break;
     

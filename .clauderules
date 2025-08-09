@@ -53,7 +53,28 @@
 - Environment-based configuration with sensible defaults
 - Transaction logging for debugging sync operations
 
-## Current Status (August 9, 2025)
-- **Phase**: CRITICAL - Real-time sync still broken, core file watcher issue unresolved
-- **Test Suite**: Clean architecture shows sync lag 169+ seconds and increasing
-- **Next**: Fix chokidar watcher going idle after initial sync - core monitoring failure
+## Current Status (August 9, 2025) - ✅ MAJOR SUCCESS
+- **Phase**: MCP TOOLS OPERATIONAL - Core functionality achieved
+- **MCP Server**: All 8 tools working and returning real conversation data
+- **Database Sync**: JSONL parsing fixed, content extraction operational
+- **Achievement**: Memory MCP tools successfully providing conversation history access
+
+## 🎯 Strategic North Stars Progress (August 2025)
+
+### ✅ North Star 1: Project Path Parameter UX - COMPLETED
+**Problem Solved**: Enhanced project path support with three intuitive input formats
+**✅ Implementation**: ProjectPathMapper utility handles all format conversions
+**✅ Success**: Users can now query using simple names, full paths, or encoded format
+**✅ Testing**: All three formats verified working with real project data
+
+### ⚠️ North Star 2: "Masquerading" Problem - STRATEGIC DECISION PENDING
+**Problem**: Tool results appear as "user" messages in Claude Code JSONL
+**Pattern**: Assistant → tool_use, System → tool_result formatted as user message
+**Impact**: Tool usage history queries return empty results
+
+**Strategic Question**: Fix masquerading parsing OR restructure approach entirely?
+- **Option A**: Implement enhanced parsing for tool result masquerading detection
+- **Option B**: Focus on conversation context with integrated tool information
+- **Uncertainty**: Value of standalone tool usage queries vs. conversational tool context
+
+**References**: `/home/alex/code/cafe/cafe-db-sync/memory-bank/cc-jsonl.md`

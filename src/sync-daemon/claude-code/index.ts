@@ -42,8 +42,13 @@ export async function processJsonlFile(filePath: string): Promise<FileProcessing
     
     if (parseResult.errors.length > 0) {
       logger.warn('parse_errors', { 
+        filePath,
         errorCount: parseResult.errors.length,
-        errors: parseResult.errors.slice(0, 5).map(e => e.message) // Log first 5 errors
+        totalLines: parseResult.linesProcessed,
+        errors: parseResult.errors.slice(0, 5).map(e => ({
+          message: e.message,
+          line: e.stack?.split('\n')[1] || 'unknown'
+        }))
       });
     }
 
