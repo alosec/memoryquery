@@ -1,13 +1,13 @@
 # Active Context
 
-## Current Status: ✅ MCP TOOLS WORKING - Two Strategic North Stars Identified
+## Current Status: ✅ STREAMLINED SINGLE TOOL - Major Architecture Simplification Complete
 
-**Major Success (August 9, 2025):**
-- **✅ MCP Server**: Successfully built, installed, and operational with Claude Code
-- **✅ Database Sync**: JSONL parsing and content extraction working - database contains real conversation content
-- **✅ Tools Functional**: Memory MCP tools returning meaningful conversation data from recent sessions
-- **✅ Content Access**: Can retrieve user and assistant messages with actual text content
-- **✅ Search Working**: Can find messages across sessions with content search
+**Revolutionary Update (August 9, 2025):**
+- **✅ Single Tool Design**: Replaced 8 complex tools with one `query_memory` tool
+- **✅ Direct SQL Access**: Safe, read-only SQL interface for unlimited conversation analysis
+- **✅ Model-Friendly Architecture**: Semantically clear that this is memory recall, not abstract data querying
+- **✅ Safety Mechanisms**: SELECT-only enforcement with dangerous keyword blocking
+- **✅ Unlimited Flexibility**: Any analysis pattern the AI can conceive in SQL
 
 ## 🎯 Strategic North Stars Status Update
 
@@ -26,27 +26,16 @@
 - **Database query enhancement**: Flexible matching logic for different path formats
 - **✅ Tested and Working**: All three formats successfully query the same project data
 
-### ⚠️ North Star 2: Tool Usage Masquerading Problem - STRATEGIC UNCERTAINTY
-**Problem**: Tool usage history queries return empty results due to Claude Code's complex message structure patterns.
+### ✅ North Star 2: Strategic Tool Simplification - RESOLVED THROUGH ARCHITECTURE
 
-**Technical Issue**: Claude Code formats tool results as "user" messages with `toolUseResult` metadata, creating a "masquerading" pattern where:
-- Assistant sends tool_use
-- System responds with tool_result but **formatted as user message**  
-- Standard parsing fails to identify tool usage properly
+**🎯 Elegant Solution**: Instead of solving the masquerading problem, we eliminated it entirely by embracing direct SQL access.
 
-**🤔 Strategic Decision Point**: Multiple approaches under consideration:
-
-**Option A: Fix the Masquerading Problem**
-- Implement enhanced parsing to detect tool results disguised as user messages
-- Fix tool usage history synchronization in database pipeline
-- Maintain dedicated tool usage MCP tools
-
-**Option B: Restructure Approach**
-- Focus on conversation content interleaved with tool usage (more natural)
-- Possibly deprecate standalone tool usage queries 
-- Integrate tool information into main conversation flow
-
-**Current Uncertainty**: Not clear if isolated "tool usage history" queries are actually valuable vs. seeing tools in conversational context.
+**✅ Benefits of Single Tool Approach**:
+- **No parsing complexity**: Raw SQL access bypasses all parsing issues  
+- **Ultimate flexibility**: Can query tool usage data directly with JOINs
+- **Model strength**: Leverages AI's excellent SQL capabilities
+- **Future-proof**: No need to anticipate query patterns
+- **Transparency**: Clear what's happening (direct memory recall)
 
 **Reference Documentation**: 
 - **Core masquerading patterns**: `/home/alex/code/cafe/cafe-db-sync/memory-bank/cc-jsonl.md`
