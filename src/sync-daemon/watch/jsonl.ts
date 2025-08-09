@@ -71,7 +71,7 @@ export function watchJsonl(
     
     // Performance and reliability settings
     persistent: true,
-    ignoreInitial: true,       // Don't process existing files (already done in initial sync)
+    ignoreInitial: false,      // Process existing files for unified bootstrap+continuous sync
     followSymlinks: false,
     depth: 2,                  // projects/project-name/file.jsonl
     
@@ -108,27 +108,30 @@ export function watchJsonl(
   watcher.on('add', (filePath) => {
     // Filter for .jsonl files
     if (filePath.endsWith('.jsonl')) {
-      const absolutePath = filePath.startsWith('/') ? filePath : join(projectsPath, filePath);
-      logWatcherEvent('add', absolutePath);
-      callback({ event: 'add', filePath: absolutePath });
+      // chokidar already provides absolute paths when watching directories
+      globalLogger.debug('file_event_path_debug', { event: 'add', originalPath: filePath, isAbsolute: filePath.startsWith('/') });
+      logWatcherEvent('add', filePath);
+      callback({ event: 'add', filePath });
     }
   });
 
   watcher.on('change', (filePath) => {
     // Filter for .jsonl files
     if (filePath.endsWith('.jsonl')) {
-      const absolutePath = filePath.startsWith('/') ? filePath : join(projectsPath, filePath);
-      logWatcherEvent('change', absolutePath);
-      callback({ event: 'change', filePath: absolutePath });
+      // chokidar already provides absolute paths when watching directories
+      globalLogger.debug('file_event_path_debug', { event: 'change', originalPath: filePath, isAbsolute: filePath.startsWith('/') });
+      logWatcherEvent('change', filePath);
+      callback({ event: 'change', filePath });
     }
   });
 
   watcher.on('unlink', (filePath) => {
     // Filter for .jsonl files
     if (filePath.endsWith('.jsonl')) {
-      const absolutePath = filePath.startsWith('/') ? filePath : join(projectsPath, filePath);
-      logWatcherEvent('unlink', absolutePath);
-      callback({ event: 'unlink', filePath: absolutePath });
+      // chokidar already provides absolute paths when watching directories
+      globalLogger.debug('file_event_path_debug', { event: 'unlink', originalPath: filePath, isAbsolute: filePath.startsWith('/') });
+      logWatcherEvent('unlink', filePath);
+      callback({ event: 'unlink', filePath });
     }
   });
 
