@@ -113,8 +113,22 @@ clone_and_build() {
     
     log_success "Repository cloned"
     
-    log_info "Installing build dependencies..."
-    npm install
+    log_info "Installing build dependencies (this may take several minutes on slow systems)..."
+    
+    # Use more conservative npm settings for weak systems
+    timeout 600 npm install --no-audit --no-fund --progress=false --loglevel=warn
+    if [ $? -eq 124 ]; then
+        log_error "npm install timed out after 10 minutes"
+        log_error "This system may be too resource-constrained for installation"
+        exit 1
+    elif [ $? -ne 0 ]; then
+        log_warning "npm install failed, trying with different approach..."
+        timeout 600 npm install --no-audit --no-fund --progress=false --loglevel=warn --prefer-offline
+        if [ $? -ne 0 ]; then
+            log_error "npm install failed after retry. System may lack sufficient resources."
+            exit 1
+        fi
+    fi
     log_success "Dependencies installed"
     
     log_info "Building TypeScript project..."
@@ -148,8 +162,12 @@ install_runtime_dependencies() {
     log_info "Installing runtime dependencies..."
     cd "$INSTALL_DIR"
     
-    # Install only production dependencies
-    npm ci --omit=dev
+    # Install only production dependencies with optimizations for weak systems
+    npm ci --omit=dev --no-audit --no-fund --progress=false --loglevel=error
+    if [ $? -ne 0 ]; then
+        log_warning "npm ci failed, trying npm install as fallback..."
+        npm install --production --no-audit --no-fund --progress=false --loglevel=error
+    fi
     log_success "Runtime dependencies installed"
 }
 
