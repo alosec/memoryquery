@@ -60,6 +60,15 @@ WHERE user_text LIKE '%error%' OR assistant_text LIKE '%error%'
 ORDER BY timestamp DESC;
 ```
 
+## 🔧 How This Works
+
+MemoryQuery watches Claude Code's extensive JSON logs of all conversations to SQL:
+
+1. **File Watcher** - Monitors Claude Code's JSONL conversation files in real-time from ~/.claude/projects/
+2. **Sync Daemon** - Parses new projects, sessions, messages, tool uses and stores them in SQLite database at ~/.local/share/memoryquery/mcp.db
+3. **MCP Server** - Provides `query_memory` tool for direct SQL access to conversation history, providing a sanitized SELECT * function for Claude to agentically query conversation dataq
+4. **Cross-Session Memory** - Remember context and decisions between Claude Code sessions "Hey Claude, what did we do yesterday?"
+
 ## 🏗️ Architecture
 
 ```
