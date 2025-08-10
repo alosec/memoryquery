@@ -62,7 +62,7 @@ ORDER BY timestamp DESC;
 
 ## 🔧 How This Works
 
-MemoryQuery watches Claude Code's extensive JSON logs of all conversations to SQL:
+MemoryQuery watches Claude Code's extensive JSON logs of all conversations and transforms them to SQLite:
 
 1. **File Watcher** - Monitors Claude Code's JSONL conversation files in real-time from ~/.claude/projects/
 2. **Sync Daemon** - Parses new projects, sessions, messages, tool uses and stores them in SQLite database at ~/.local/share/memoryquery/mcp.db
