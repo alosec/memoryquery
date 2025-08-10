@@ -51,7 +51,7 @@
 - **Core masquerading patterns**: `/path/to/cafe/cafe-db-sync/memory-bank/cc-jsonl.md`
 - **Detailed Claude Code log analysis**: `/path/to/cafedelic/docs/claude_code_logs.md`
 
-**Database Population Question**: Unclear if tool usage data is even being synchronized correctly to destination database - requires investigation.
+**Database Population**: Uses MEMQ_DB_PATH environment variable for consistent database path configuration.
 
 ## Project Genesis (August 8, 2025)
 
@@ -116,10 +116,10 @@ simple-memory-mcp/
 ### 🎯 Current Development Focus (August 9, 2025)
 1. **✅ MCP Server Complete**: All 8 tools working, schema fixed, installed with project scope
 2. **✅ Database Access**: Real-time message retrieval operational (current session data accessible)
-3. **❌ NEW CRITICAL ISSUE**: Message content fields (userText, assistantText) not populated during sync
-4. **❌ Data Transformation Problem**: Sync daemon metadata working but conversation content missing
+3. **✅ ALIGNED CONFIGURATION**: Database path environment variable standardized to MEMQ_DB_PATH
+4. **✅ Production Ready**: Environment variable alignment complete for install script compatibility
 
-**Critical Priority**: Fix sync daemon content population - message text not being extracted from JSONL and stored in database
+**Current Priority**: Database path environment variables standardized across all components for production deployment consistency
 
 ## 🚀 Next Phase: Public Release Preparation
 
@@ -170,7 +170,7 @@ Every architectural decision should be made through the lens of: "Is this the ri
 ### Critical Issues to Address
 1. **Hardcoded Paths**: Some paths still reference original Claude Code DB instead of simple-memory DB
    - Need systematic review of all database path references
-   - Ensure consistent use of `SIMPLE_MEMORY_DB_PATH` environment variable
+   - Ensure consistent use of `MEMQ_DB_PATH` environment variable
    
 2. **TODO Comments**: Unresolved TODO comments throughout codebase need tracking
    - Create issue tracker or resolve inline

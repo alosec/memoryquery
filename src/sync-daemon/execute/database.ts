@@ -12,8 +12,8 @@ import { withDatabaseWriteLock, withSessionLock } from '../utils/database-lock.j
 import { TransactionLogger } from './transaction-log.js';
 
 // Database configuration
-const DB_PATH = process.env.SIMPLE_MEMORY_DB_PATH || join(homedir(), '.local/share/simple-memory/mcp.db');
-const DB_DIR = join(homedir(), '.local/share/simple-memory');
+const DB_PATH = process.env.MEMQ_DB_PATH || join(homedir(), '.local/share/memoryquery/mcp.db');
+const DB_DIR = join(homedir(), '.local/share/memoryquery');
 
 let database: Database.Database | null = null;
 

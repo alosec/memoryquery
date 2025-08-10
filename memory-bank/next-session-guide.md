@@ -57,7 +57,7 @@ npm run test:mcp        # Test MCP tools
 ## Debugging Tips
 
 ### If sync isn't working:
-- Check database path: `echo $SIMPLE_MEMORY_DB_PATH`
+- Check database path: `echo $MEMQ_DB_PATH`
 - Verify JSONL path: `ls ~/.claude/projects/test/`
 - Check sync daemon logs: `npm run logs`
 

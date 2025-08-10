@@ -1,4 +1,4 @@
-# Simple Memory MCP - Test Suite
+# MemoryQuery - Test Suite
 
 ## Clean Test Architecture
 **Approach**: Timestamp-based validation using real conversation data
@@ -93,8 +93,8 @@ npm run test:quick
    - Check status with `npm run test:status`
 
 3. **Database Path**: Configured correctly
-   - Default: `~/.local/share/simple-memory/mcp.db`
-   - Override with: `SIMPLE_MEMORY_DB_PATH=/path/to/db`
+   - Default: `~/.local/share/memoryquery/mcp.db`
+   - Override with: `MEMQ_DB_PATH=/path/to/db`
 
 ## Troubleshooting
 

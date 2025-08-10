@@ -12,11 +12,11 @@ export async function statusCommand(options?: {
   projectsPath?: string;
   json?: boolean;
 }) {
-  const dbPath = options?.dbPath || path.join(os.homedir(), '.local/share/simple-memory/mcp.db');
+  const dbPath = options?.dbPath || path.join(os.homedir(), '.local/share/memoryquery/mcp.db');
   const projectsPath = options?.projectsPath || path.join(os.homedir(), '.claude', 'projects');
 
   if (!options?.json) {
-    console.log('Simple Memory MCP - Status Check');
+    console.log('MemoryQuery - Status Check');
     console.log('=' + '='.repeat(40));
   }
 

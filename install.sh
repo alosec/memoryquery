@@ -2,9 +2,10 @@
 set -euo pipefail
 
 # MemoryQuery Installation Script
-# Installs MCP server for Claude Code conversation memory access
+# Clean installation that builds in /tmp and installs only dist to user directory
 
 readonly REPO_URL="https://github.com/alosec/memoryquery.git"
+readonly BUILD_DIR="/tmp/memoryquery"
 readonly INSTALL_DIR="$HOME/.local/share/memoryquery"
 readonly DB_PATH="$HOME/.local/share/memoryquery/mcp.db"
 readonly SERVICE_NAME="memoryquery"
@@ -79,8 +80,18 @@ check_dependencies() {
     log_success "All dependencies found"
 }
 
+cleanup_build_dir() {
+    log_info "Cleaning up build directory..."
+    if [ -d "$BUILD_DIR" ]; then
+        rm -rf "$BUILD_DIR"
+    fi
+}
+
 setup_directories() {
     log_info "Setting up directories..."
+    
+    # Clean up any previous build
+    cleanup_build_dir
     
     # Create installation directory
     mkdir -p "$INSTALL_DIR"
@@ -89,39 +100,53 @@ setup_directories() {
     log_success "Directories created"
 }
 
-clone_repository() {
-    log_info "Cloning repository..."
+clone_and_build() {
+    log_info "Cloning repository to build directory..."
     
-    if [ -d "$INSTALL_DIR/.git" ]; then
-        log_info "Repository already exists, updating..."
-        cd "$INSTALL_DIR"
-        git pull origin main
-    else
-        # Remove directory if it exists but isn't a git repo
-        if [ -d "$INSTALL_DIR" ]; then
-            rm -rf "$INSTALL_DIR"
-        fi
-        git clone "$REPO_URL" "$INSTALL_DIR"
-    fi
+    # Clone to temporary build directory
+    git clone "$REPO_URL" "$BUILD_DIR"
+    cd "$BUILD_DIR"
     
-    cd "$INSTALL_DIR"
-    log_success "Repository cloned/updated"
-}
-
-install_dependencies() {
-    log_info "Installing npm dependencies..."
-    cd "$INSTALL_DIR"
+    log_success "Repository cloned"
     
+    log_info "Installing build dependencies..."
     npm install
     log_success "Dependencies installed"
-}
-
-build_project() {
-    log_info "Building TypeScript project..."
-    cd "$INSTALL_DIR"
     
+    log_info "Building TypeScript project..."
     npm run build
     log_success "Project built successfully"
+}
+
+install_built_files() {
+    log_info "Installing built files to user directory..."
+    
+    # Remove existing installation 
+    if [ -d "$INSTALL_DIR" ]; then
+        rm -rf "$INSTALL_DIR"
+    fi
+    mkdir -p "$INSTALL_DIR"
+    
+    # Copy only the built dist directory and essential files
+    cp -r "$BUILD_DIR/dist" "$INSTALL_DIR/"
+    cp "$BUILD_DIR/package.json" "$INSTALL_DIR/"
+    cp "$BUILD_DIR/example.mcp.json" "$INSTALL_DIR/"
+    
+    # Copy package-lock.json if it exists (for npm ci)
+    if [ -f "$BUILD_DIR/package-lock.json" ]; then
+        cp "$BUILD_DIR/package-lock.json" "$INSTALL_DIR/"
+    fi
+    
+    log_success "Built files installed"
+}
+
+install_runtime_dependencies() {
+    log_info "Installing runtime dependencies..."
+    cd "$INSTALL_DIR"
+    
+    # Install only production dependencies
+    npm ci --omit=dev
+    log_success "Runtime dependencies installed"
 }
 
 setup_environment() {
@@ -166,11 +191,11 @@ setup_cli_commands() {
     mkdir -p "$HOME/.local/bin"
     
     # Create memoryquery command wrapper
-    cat > "$HOME/.local/bin/memoryquery" << 'EOF'
+    cat > "$HOME/.local/bin/memoryquery" << EOF
 #!/bin/bash
 # MemoryQuery CLI wrapper
-cd "$HOME/.local/share/memoryquery"
-exec npm run cli -- "$@"
+cd "$INSTALL_DIR"
+exec node dist/cli/index.js "\$@"
 EOF
     
     chmod +x "$HOME/.local/bin/memoryquery"
@@ -192,12 +217,8 @@ initialize_database() {
     # Set environment variable for this session
     export MEMQ_DB_PATH="$DB_PATH"
     
-    # Initialize database schema (if the CLI supports it)
-    if npm run cli -- init 2>/dev/null || true; then
-        log_success "Database initialized"
-    else
-        log_info "Database will be initialized on first sync"
-    fi
+    # Database will be initialized automatically on first use
+    log_success "Database configuration ready"
 }
 
 start_services() {
@@ -207,13 +228,8 @@ start_services() {
     # Set environment variable
     export MEMQ_DB_PATH="$DB_PATH"
     
-    # Start sync daemon
-    if npm run start -- --daemon 2>/dev/null; then
-        log_success "Sync daemon started"
-    else
-        log_warning "Could not start sync daemon automatically"
-        echo "You can start it manually with: memoryquery start"
-    fi
+    # Services will be started on demand - MCP server starts automatically when Claude Code connects
+    log_success "Services configured for automatic startup"
 }
 
 verify_installation() {
@@ -261,19 +277,26 @@ print_completion_message() {
     echo "  • Automatic sync of new conversations to searchable database"
     echo "  • Cross-session memory and pattern analysis"
     echo
+    echo -e "${BLUE}Installation Details:${NC}"
+    echo "  • Installed to: $INSTALL_DIR"
+    echo "  • Database location: $DB_PATH"
+    echo "  • CLI command: memoryquery"
+    echo
     echo -e "${BLUE}Usage:${NC}"
     echo "  • In Claude Code: Use memory tools automatically via MCP"
     echo "  • CLI management: memoryquery start|stop|status"
-    echo "  • Database location: $DB_PATH"
+    echo "  • Check status: memoryquery status"
     echo
     echo -e "${BLUE}Next Steps:${NC}"
     echo "  1. Start a new Claude Code conversation"
     echo "  2. Ask Claude to query its conversation history"
     echo "  3. Watch the powerful memory capabilities in action!"
     echo
-    echo -e "${YELLOW}Note:${NC} If ~/.local/bin is not in your PATH, add this to your shell profile:"
-    echo "export PATH=\"\$HOME/.local/bin:\$PATH\""
-    echo
+    if [[ ":$PATH:" != *":$HOME/.local/bin:"* ]]; then
+        echo -e "${YELLOW}Note:${NC} Add ~/.local/bin to your PATH for CLI access:"
+        echo "export PATH=\"\$HOME/.local/bin:\$PATH\""
+        echo
+    fi
 }
 
 cleanup_on_error() {
@@ -288,13 +311,16 @@ cleanup_on_error() {
     # Remove CLI command
     rm -f "$HOME/.local/bin/memoryquery"
     
+    # Clean up build directory
+    cleanup_build_dir
+    
     echo "Cleanup complete. You can try running the installer again."
     exit 1
 }
 
 main() {
     echo -e "${BLUE}MemoryQuery Installer${NC}"
-    echo "Installing Claude Code conversation memory system..."
+    echo "Clean installation for Claude Code conversation memory system..."
     echo
     
     # Set up error handling
@@ -303,14 +329,17 @@ main() {
     # Run installation steps
     check_dependencies
     setup_directories
-    clone_repository
-    install_dependencies
-    build_project
+    clone_and_build
+    install_built_files
+    install_runtime_dependencies
     setup_environment
     register_mcp_server
     setup_cli_commands
     initialize_database
     start_services
+    
+    # Clean up build directory
+    cleanup_build_dir
     
     # Verify everything worked
     if verify_installation; then

@@ -6,17 +6,17 @@ import * as path from 'path';
 import * as os from 'os';
 import { createMemoryServer, ServerConfig } from './server';
 
-// Default Simple Memory database path
-const DEFAULT_DB_PATH = path.join(os.homedir(), '.local/share/simple-memory/mcp.db');
+// Default MemoryQuery database path
+const DEFAULT_DB_PATH = path.join(os.homedir(), '.local/share/memoryquery/mcp.db');
 
 /**
  * Create server configuration from environment variables
  */
 function createServerConfig(): ServerConfig {
   return {
-    name: 'simple-memory-mcp',
+    name: 'memoryquery',
     version: '0.1.0',
-    dbPath: process.env.SIMPLE_MEMORY_DB_PATH || DEFAULT_DB_PATH
+    dbPath: process.env.MEMQ_DB_PATH || DEFAULT_DB_PATH
   };
 }
 

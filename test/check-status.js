@@ -10,7 +10,7 @@ const { exec } = require('child_process');
 const { getDatabaseStats, validateSyncDaemonRunning, findRealConversations } = require('./real-utils');
 
 async function checkStatus() {
-  console.log('Simple Memory MCP - Status Check');
+  console.log('MemoryQuery - Status Check');
   console.log('=' + '='.repeat(40));
   
   try {
@@ -24,7 +24,7 @@ async function checkStatus() {
       console.log(`  Size: ${(dbStats.fileSize / 1024 / 1024).toFixed(1)} MB`);
     } else {
       console.log('Database: NOT FOUND');
-      console.log('  Path: ~/.local/share/simple-memory/mcp.db');
+      console.log('  Path: ~/.local/share/memoryquery/mcp.db');
     }
     
     // 2. Check conversation files

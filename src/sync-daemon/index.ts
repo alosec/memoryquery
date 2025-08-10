@@ -13,7 +13,7 @@ import { SyncConfig } from './claude-code/types.js';
 const DEFAULT_CONFIG: SyncConfig = {
   projectsPath: process.env.CLAUDE_PROJECTS_PATH || 
     (process.env.NODE_ENV === 'production' ? '/claude-projects' : join(homedir(), '.claude', 'projects')),
-  dbPath: process.env.SIMPLE_MEMORY_DB_PATH || join(homedir(), '.local/share/simple-memory/mcp.db'),
+  dbPath: process.env.MEMQ_DB_PATH || join(homedir(), '.local/share/memoryquery/mcp.db'),
   watchDebounce: 100,
   maxRetries: 5
 };

@@ -12,11 +12,11 @@ import { stopCommand } from './commands/stop';
 import * as path from 'path';
 import * as os from 'os';
 
-const DEFAULT_DB_PATH = path.join(os.homedir(), '.local/share/simple-memory/mcp.db');
+const DEFAULT_DB_PATH = path.join(os.homedir(), '.local/share/memoryquery/mcp.db');
 
 program
-  .name('simple-memory')
-  .description('Unified memory system for AI coding tools')
+  .name('memoryquery')
+  .description('SQL-based memory system for AI conversation history')
   .version('0.1.0');
 
 program

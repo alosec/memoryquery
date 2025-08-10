@@ -6,7 +6,7 @@
         "./dist/mcp-server/index.js"
       ],
       "env": {
-        "SIMPLE_MEMORY_DB_PATH": "~/.local/share/memoryquery/mcp.db"
+        "MEMQ_DB_PATH": "~/.local/share/memoryquery/mcp.db"
       }
     }
   }

@@ -16,9 +16,9 @@ interface ResetOptions {
  * Reset database command
  */
 export async function resetCommand(options: ResetOptions = {}): Promise<void> {
-  const dbPath = options.dbPath || path.join(os.homedir(), '.local/share/simple-memory/mcp.db');
+  const dbPath = options.dbPath || path.join(os.homedir(), '.local/share/memoryquery/mcp.db');
   
-  console.log('Simple Memory MCP - Database Reset');
+  console.log('MemoryQuery - Database Reset');
   console.log('=====================================');
   console.log(`Database: ${dbPath}`);
   
@@ -47,7 +47,7 @@ export async function resetCommand(options: ResetOptions = {}): Promise<void> {
     fs.unlinkSync(dbPath);
     
     // Remove logs directory
-    const logsDir = path.join(os.homedir(), '.local/share/simple-memory/logs');
+    const logsDir = path.join(os.homedir(), '.local/share/memoryquery/logs');
     if (fs.existsSync(logsDir)) {
       console.log('Clearing logs directory...');
       fs.rmSync(logsDir, { recursive: true, force: true });
@@ -94,15 +94,15 @@ async function stopServices(): Promise<void> {
   
   try {
     // Kill sync daemon processes
-    await execAsync('pkill -f "simple-memory.*sync" || true').catch(() => {});
+    await execAsync('pkill -f "memoryquery.*sync" || true').catch(() => {});
     await execAsync('pkill -f "sync-daemon" || true').catch(() => {});
     
     // Kill MCP server processes
-    await execAsync('pkill -f "simple-memory.*mcp" || true').catch(() => {});
+    await execAsync('pkill -f "memoryquery.*mcp" || true').catch(() => {});
     await execAsync('pkill -f "mcp-server" || true').catch(() => {});
     
     // Remove PID files
-    const pidFile = path.join(os.homedir(), '.local/share/simple-memory/logs/sync-daemon.pid');
+    const pidFile = path.join(os.homedir(), '.local/share/memoryquery/logs/sync-daemon.pid');
     if (fs.existsSync(pidFile)) {
       fs.unlinkSync(pidFile);
     }

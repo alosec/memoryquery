@@ -126,7 +126,7 @@ npm run register     # Register MCP server with Claude Code
 
 ### ✅ Configuration Management (IMPLEMENTED)
 **✅ Environment Variables:**
-- `SIMPLE_MEMORY_DB_PATH`: Path to simple-memory database (defaults to ~/.local/share/simple-memory/mcp.db)
+- `MEMQ_DB_PATH`: Path to MemoryQuery database (defaults to ~/.local/share/memoryquery/mcp.db)
 - `CLAUDE_PROJECTS_PATH`: Path to JSONL files (implemented - defaults to ~/.claude/projects)
 - `LOG_LEVEL`: Logging verbosity [PENDING]
 - `SERVICE_PORT`: HTTP endpoint port [PENDING]
@@ -134,8 +134,8 @@ npm run register     # Register MCP server with Claude Code
 **✅ Configuration Pattern**:
 ```typescript
 // Auto-detection with environment override (updated for separate database)
-const DEFAULT_DB_PATH = path.join(os.homedir(), '.local/share/simple-memory/mcp.db');
-const dbPath = process.env.SIMPLE_MEMORY_DB_PATH || DEFAULT_DB_PATH;
+const DEFAULT_DB_PATH = path.join(os.homedir(), '.local/share/memoryquery/mcp.db');
+const dbPath = process.env.MEMQ_DB_PATH || DEFAULT_DB_PATH;
 ```
 
 **Config Files [PENDING]:**

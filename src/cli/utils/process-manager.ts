@@ -65,7 +65,7 @@ export async function startDaemon(config?: {
     // Prepare environment variables
     const env = { ...process.env };
     if (config?.dbPath) {
-      env.SIMPLE_MEMORY_DB_PATH = config.dbPath;
+      env.MEMQ_DB_PATH = config.dbPath;
     }
     if (config?.projectsPath) {
       env.CLAUDE_PROJECTS_PATH = config.projectsPath;
@@ -119,7 +119,7 @@ export async function startDaemon(config?: {
       } else {
         return {
           success: false,
-          error: 'Daemon failed to start - check logs in ~/.local/share/simple-memory/logs/'
+          error: 'Daemon failed to start - check logs in ~/.local/share/memoryquery/logs/'
         };
       }
     }
@@ -144,7 +144,7 @@ export async function startDaemon(config?: {
 export async function stopDaemon(): Promise<{ success: boolean; error?: string }> {
   try {
     // First check PID file
-    const pidFile = path.join(os.homedir(), '.local/share/simple-memory/logs/sync-daemon.pid');
+    const pidFile = path.join(os.homedir(), '.local/share/memoryquery/logs/sync-daemon.pid');
     if (fs.existsSync(pidFile)) {
       try {
         const pid = parseInt(fs.readFileSync(pidFile, 'utf-8').trim());
@@ -326,7 +326,7 @@ export async function startMCPServer(config?: {
     // Prepare environment
     const env = { ...process.env };
     if (config?.dbPath) {
-      env.SIMPLE_MEMORY_DB_PATH = config.dbPath;
+      env.MEMQ_DB_PATH = config.dbPath;
     }
 
     // Determine how to run

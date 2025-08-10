@@ -15,8 +15,8 @@ const Database = require('better-sqlite3');
 const PROJECTS_PATH = process.env.CLAUDE_PROJECTS_PATH || 
   path.join(homedir(), '.claude', 'projects');
 
-const DB_PATH = process.env.SIMPLE_MEMORY_DB_PATH || 
-  path.join(homedir(), '.local', 'share', 'simple-memory', 'mcp.db');
+const DB_PATH = process.env.MEMQ_DB_PATH || 
+  path.join(homedir(), '.local', 'share', 'memoryquery', 'mcp.db');
 
 /**
  * Get latest timestamp from all JSONL files

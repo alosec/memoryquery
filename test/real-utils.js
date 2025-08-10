@@ -95,8 +95,8 @@ function parseRealJsonl(filePath) {
  * Get database path from environment or default
  */
 function getDbPath() {
-  return process.env.SIMPLE_MEMORY_DB_PATH || 
-    path.join(os.homedir(), '.local/share/simple-memory/mcp.db');
+  return process.env.MEMQ_DB_PATH || 
+    path.join(os.homedir(), '.local/share/memoryquery/mcp.db');
 }
 
 /**

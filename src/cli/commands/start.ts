@@ -16,9 +16,9 @@ export async function startCommand(options: {
   background?: boolean;
   interactive?: boolean;
 }) {
-  console.log('🚀 Starting Simple Memory MCP...');
+  console.log('🚀 Starting MemoryQuery...');
   
-  const dbPath = options.dbPath || path.join(os.homedir(), '.local/share/simple-memory/mcp.db');
+  const dbPath = options.dbPath || path.join(os.homedir(), '.local/share/memoryquery/mcp.db');
   const projectsPath = options.projectsPath || path.join(os.homedir(), '.claude', 'projects');
   const useDaemon = options.interactive ? false : (options.daemon || options.background || true); // Default to daemon mode unless interactive requested
   
