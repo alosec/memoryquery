@@ -105,7 +105,7 @@ JSONL Files → File Watcher → Parser → SQLite Database → ✅ MCP Tools
 **✅ Supported Input Formats**:
 ```
 1. Simple name: "simple-memory-mcp"                    # Most intuitive
-2. Full path:   "/home/alex/code/simple-memory-mcp"    # Natural for filesystem users  
+2. Full path:   "/path/to/memoryquery"    # Natural for filesystem users  
 3. Encoded:     "-home-alex-code-simple-memory-mcp"    # Backward compatibility
 ```
 
@@ -129,11 +129,11 @@ System    → tool_result data BUT formatted as "user" message type
 **Evidence**: Tool usage history queries return empty despite tool data in database  
 
 **Critical Reference Documentation**:
-- **`/home/alex/code/cafe/cafe-db-sync/memory-bank/cc-jsonl.md`**: Key patterns for the "masquerading" problem
+- **`/path/to/cafe/cafe-db-sync/memory-bank/cc-jsonl.md`**: Key patterns for the "masquerading" problem
   - Documents how tool results appear as user messages with `toolUseResult` metadata
   - Shows the 3 message types: summary, user, assistant
   - Explains "User" masquerade pattern and threading behavior
-- **`/home/alex/code/cafedelic/docs/claude_code_logs.md`**: Comprehensive Claude Code log format analysis
+- **`/path/to/cafedelic/docs/claude_code_logs.md`**: Comprehensive Claude Code log format analysis
   - Complete JSONL structure documentation
   - Tool usage detection patterns
   - File operation parsing strategies

@@ -1,7 +1,7 @@
-# Simple Memory MCP - Project Brief
+# MemoryQuery - Project Brief
 
 ## Purpose
-A unified package that provides seamless access to Claude Code conversation history through MCP protocol integration. The **primary focus is the MCP server** - a robust, production-ready tool for conversation history access. The sync daemon serves as a **supporting component** to ensure the MCP server has real-time access to current conversation data.
+A unified package that provides seamless access to Claude Code conversation history through MCP protocol integration. The **primary focus is the MCP server** - a production-ready tool for conversation history access with SQL query capabilities. The sync daemon serves as a **supporting component** to ensure the MCP server has real-time access to current conversation data.
 
 ## Strategic Focus
 **MCP Server as Core Product**: The conversation history access tools are the main deliverable. The sync daemon exists solely to support MCP functionality by maintaining fresh data access - not as a general-purpose sync system.

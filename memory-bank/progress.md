@@ -15,7 +15,7 @@
 ## ✅ Project Foundation Complete
 
 ### Repository Initialization (August 8, 2025)
-- **Clean git repository**: Initialized at `/home/alex/code/simple-memory-mcp`
+- **Clean git repository**: Initialized at `/path/to/memoryquery`
 - **Directory structure**: Organized src/, docker/, scripts/, docs/, memory-bank/
 - **Memory bank**: Complete project context documentation
 - **Architecture planning**: Clean separation of MCP server, sync daemon, and CLI
@@ -210,8 +210,8 @@ class OpenAIAPIParser implements LogParser { }
 - **Full testing**: All three formats verified working with real project data
 
 **✅ User Experience Transformation**:
-- **Before**: Users had to guess cryptic encoded format (`-home-alex-code-simple-memory-mcp`)
-- **After**: Users can use natural formats (`simple-memory-mcp` or `/home/alex/code/simple-memory-mcp`)
+- **Before**: Users had to guess cryptic encoded format (`path-to-memoryquery`)
+- **After**: Users can use natural formats (`memoryquery` or `/path/to/memoryquery`)
 
 ### Installation Experience (PENDING)
 - **Single command setup**: `curl -sSL install-url | bash`
@@ -253,14 +253,14 @@ This project aims to become the standard solution for AI conversation memory and
 ### Claude Code JSONL Format and Masquerading Problem
 The following external documents contain essential patterns and analysis for solving the strategic north star issues:
 
-#### **`/home/alex/code/cafe/cafe-db-sync/memory-bank/cc-jsonl.md`**
+#### **`/path/to/cafe/cafe-db-sync/memory-bank/cc-jsonl.md`**
 **Primary reference for masquerading problem**
 - **3 message types**: summary, user, assistant
 - **"User" masquerade pattern**: Tool results appear as user messages with `toolUseResult` metadata  
 - **Task sidechains**: Multi-threading behavior and UUID correlation patterns
 - **Tool taxonomy**: Complete list of Claude Code tool types
 
-#### **`/home/alex/code/cafedelic/docs/claude_code_logs.md`**
+#### **`/path/to/cafedelic/docs/claude_code_logs.md`**
 **Complete Claude Code logging system documentation**
 - **Session log structure**: Full JSONL format specification
 - **Tool usage detection**: Patterns for identifying file operations

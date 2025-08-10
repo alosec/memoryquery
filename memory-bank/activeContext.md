@@ -25,9 +25,9 @@
 **Problem Solved**: Users can now use intuitive project path parameters instead of cryptic encoded names.
 
 **✅ Three Formats Now Supported**:
-1. **✅ Simple project name**: `simple-memory-mcp` (most intuitive)
-2. **✅ Full filesystem paths**: `/home/alex/code/simple-memory-mcp` (natural for users)  
-3. **✅ Original encoded format**: `-home-alex-code-simple-memory-mcp` (backward compatibility)
+1. **✅ Simple project name**: `memoryquery` (most intuitive)
+2. **✅ Full filesystem paths**: `/path/to/memoryquery` (natural for users)  
+3. **✅ Original encoded format**: `path-to-memoryquery` (backward compatibility)
 
 **✅ Implementation Complete**:
 - **ProjectPathMapper utility**: Handles conversion between all three formats
@@ -48,8 +48,8 @@
 - **Transparency**: Clear what's happening (direct memory recall)
 
 **Reference Documentation**: 
-- **Core masquerading patterns**: `/home/alex/code/cafe/cafe-db-sync/memory-bank/cc-jsonl.md`
-- **Detailed Claude Code log analysis**: `/home/alex/code/cafedelic/docs/claude_code_logs.md`
+- **Core masquerading patterns**: `/path/to/cafe/cafe-db-sync/memory-bank/cc-jsonl.md`
+- **Detailed Claude Code log analysis**: `/path/to/cafedelic/docs/claude_code_logs.md`
 
 **Database Population Question**: Unclear if tool usage data is even being synchronized correctly to destination database - requires investigation.
 
@@ -142,7 +142,7 @@ simple-memory-mcp/
 - **Success Metric**: MCP tools return current conversation data without manual intervention
 
 ### Reference Implementation Strategy
-- **Study Working Sync**: Extract core sync logic from `/home/alex/code/cafe/cafe-db-sync` (without importing technical debt)
+- **Study Working Sync**: Extract core sync logic from `/path/to/cafe/cafe-db-sync` (without importing technical debt)
 - **Enhance MCP Tools**: Build on proven MCP server patterns from `claude-code-memory-mcp`
 - **Modern Packaging**: Apply current software packaging practices from scratch
 

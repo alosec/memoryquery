@@ -10,7 +10,7 @@
 
 ```bash
 # Terminal 1: Start sync daemon
-cd /home/alex/code/simple-memory-mcp
+cd /path/to/memoryquery
 npm run dev:sync
 
 # Terminal 2: Build project if needed
@@ -74,7 +74,7 @@ npm run test:mcp        # Test MCP tools
 ## Test File Locations
 
 ```
-/home/alex/code/simple-memory-mcp/
+/path/to/memoryquery/
 ├── test/
 │   ├── sync-pipeline.js      # Start here
 │   ├── mcp-query.js          # Then this

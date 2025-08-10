@@ -6,7 +6,7 @@
 export class ProjectPathMapper {
   /**
    * Convert real filesystem path to Claude Code encoded directory name
-   * Example: /home/alex/code/simple-memory-mcp → -home-alex-code-simple-memory-mcp
+   * Example: /path/to/memory-sql-mcp → path-to-memory-sql-mcp
    */
   static realPathToEncoded(realPath: string): string {
     if (!realPath || typeof realPath !== 'string') {
@@ -19,7 +19,7 @@ export class ProjectPathMapper {
 
   /**
    * Convert Claude Code encoded directory name to real filesystem path
-   * Example: -home-alex-code-simple-memory-mcp → /home/alex/code/simple-memory-mcp
+   * Example: path-to-memory-sql-mcp → /path/to/memory-sql-mcp
    */
   static encodedToRealPath(encodedPath: string): string {
     if (!encodedPath || typeof encodedPath !== 'string') {

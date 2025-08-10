@@ -1,7 +1,7 @@
 {
-  "name": "simple-memory-mcp",
+  "name": "memoryquery",
   "version": "0.1.0",
-  "description": "Unified memory system for AI coding tools with MCP protocol integration",
+  "description": "SQL-based memory system for AI conversation history with MCP protocol integration",
   "main": "dist/index.js",
   "scripts": {
     "dev": "concurrently \"npm run dev:mcp\" \"npm run dev:sync\" \"npm run dev:cli\"",
@@ -30,7 +30,7 @@
     "reset:force": "node dist/cli/index.js reset --force"
   },
   "bin": {
-    "simple-memory": "./dist/cli/index.js"
+    "memoryquery": "./dist/cli/index.js"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.17.0",
@@ -61,7 +61,7 @@
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/user/simple-memory-mcp.git"
+    "url": "https://github.com/alosec/memoryquery.git"
   },
   "license": "MIT",
   "engines": {

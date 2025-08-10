@@ -177,8 +177,8 @@ const dbPath = process.env.SIMPLE_MEMORY_DB_PATH || DEFAULT_DB_PATH;
 **⚠️ Tool Usage Masquerading Problem**:
 **Question**: Do we fix tool usage synchronization or restructure the approach entirely?
 **Reference Documentation**:
-- **`/home/alex/code/cafe/cafe-db-sync/memory-bank/cc-jsonl.md`**: Core patterns and message type analysis
-- **`/home/alex/code/cafedelic/docs/claude_code_logs.md`**: Complete Claude Code JSONL format documentation
+- **`/path/to/cafe/cafe-db-sync/memory-bank/cc-jsonl.md`**: Core patterns and message type analysis
+- **`/path/to/cafedelic/docs/claude_code_logs.md`**: Complete Claude Code JSONL format documentation
 
 **Key Uncertainty**: Whether standalone tool usage queries provide sufficient value vs. integrated conversational tool context
 
