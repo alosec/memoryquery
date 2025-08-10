@@ -73,8 +73,12 @@ check_dependencies() {
     # Check Node.js version (basic check)
     local node_version
     node_version=$(node --version | cut -d'v' -f2 | cut -d'.' -f1)
-    if [ "$node_version" -lt 16 ]; then
-        log_warning "Node.js version may be too old. Recommended: v16 or higher"
+    if [ "$node_version" -lt 18 ]; then
+        log_error "Node.js version too old. Required: v18 or higher, found: v$node_version"
+        echo "Please upgrade Node.js via your package manager"
+        exit 1
+    elif [ "$node_version" -lt 20 ]; then
+        log_warning "Node.js v$node_version detected. Some features may require v20+, but proceeding..."
     fi
     
     log_success "All dependencies found"
